@@ -1,7 +1,7 @@
 // Service worker do Cyberly Diet.
 // Não guarda dados do usuário: as páginas sempre vêm da internet.
 // Sem conexão, mostra a página "Sem conexão com internet".
-const CACHE = 'cyberly-offline-v1';
+const CACHE = 'cyberly-offline-v2';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/icons/icon-192.png'];
 
