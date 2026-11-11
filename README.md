@@ -39,8 +39,9 @@ Depois, dê dois cliques em **`serve-lan.bat`** (ou rode `npm run build` + `php 
 - No celular (mesmo Wi-Fi): `http://IP-DO-PC:8000` — o script mostra o IP (ex.: `http://192.168.1.6:8000`).
   Na primeira vez o Windows pode pedir para liberar o PHP no firewall: permita em **redes privadas**.
 
-No primeiro acesso, crie sua conta em **Criar conta**. Depois disso o cadastro fica fechado
-(para abrir para outras pessoas, use `ALLOW_REGISTRATION=true`).
+O cadastro é **por convite**: em **Criar conta**, a pessoa precisa informar a chave definida em
+`REGISTRATION_KEY`. Para trocar a chave, altere o `.env` (ou a variável na Vercel) — quem já tem conta não é afetado.
+Sem `REGISTRATION_KEY`, só o primeiro usuário consegue se cadastrar.
 
 > A câmera funciona pelo celular mesmo em `http://` porque usamos o seletor de arquivos com
 > `capture="environment"`. A foto é reduzida no navegador (máx. 1568 px, JPEG) antes do envio.
@@ -113,7 +114,7 @@ O projeto já tem `vercel.json` (runtime comunitário `vercel-php`) e `api/index
 
 1. Suba o projeto para um repositório Git (o `.env` **não** vai junto) e importe na Vercel.
 2. Em **Settings → Environment Variables**, cadastre:
-   `APP_KEY` (o mesmo do `.env`), `APP_URL`, `GEMINI_API_KEY`, `DB_HOST`, `DB_PORT`,
+   `APP_KEY` (o mesmo do `.env`), `APP_URL`, `GEMINI_API_KEY`, `REGISTRATION_KEY`, `DB_HOST`, `DB_PORT`,
    `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
    `AWS_DEFAULT_REGION`, `AWS_BUCKET`, `AWS_ENDPOINT`.
    (As demais — `APP_ENV`, caches em `/tmp`, `MEAL_PHOTOS_DISK=s3`, `DB_CONNECTION=pgsql` — já estão no `vercel.json`.)
@@ -135,5 +136,6 @@ Observações:
 | `ANTHROPIC_MODEL` | `claude-opus-5-5` | Modelo do Claude (se `AI_PROVIDER=anthropic`) |
 | `ANTHROPIC_EFFORT` | `medium` | `low` = mais rápido/barato, `high` = mais cuidadoso |
 | `MEAL_PHOTOS_DISK` | `local` | `local` ou `s3` (Supabase) |
-| `ALLOW_REGISTRATION` | `false` | Libera cadastro de novos usuários |
+| `REGISTRATION_KEY` | — | Chave de convite exigida para criar conta. Vazia = desativada |
+| `ALLOW_REGISTRATION` | `false` | Libera cadastro sem chave (ignorado se `REGISTRATION_KEY` estiver definida) |
 | `APP_TIMEZONE` | `America/Sao_Paulo` | Fuso usado para "hoje" |

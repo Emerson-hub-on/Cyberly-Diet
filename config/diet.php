@@ -15,6 +15,12 @@ return [
     'allow_registration' => (bool) env('ALLOW_REGISTRATION', false),
 
     /*
+    | Chave exigida para criar conta (convite). Se definida, qualquer pessoa vê a tela de cadastro,
+    | mas só cria a conta quem informar esta chave.
+    */
+    'registration_key' => env('REGISTRATION_KEY'),
+
+    /*
     | IA usada para analisar as fotos: "gemini" (nível gratuito do Google) ou "anthropic" (Claude, pago).
     */
     'ai_provider' => env('AI_PROVIDER', 'gemini'),

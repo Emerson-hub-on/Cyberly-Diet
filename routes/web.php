@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    // Limita tentativas por IP para evitar força bruta de senha/chave
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::get('/cadastro', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/cadastro', [AuthController::class, 'register']);
+    Route::post('/cadastro', [AuthController::class, 'register'])->middleware('throttle:5,1');
 });
 
 Route::middleware('auth')->group(function () {

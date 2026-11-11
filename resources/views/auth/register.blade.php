@@ -36,6 +36,14 @@
             <label class="label" for="password_confirmation">Confirmar senha</label>
             <input id="password_confirmation" name="password_confirmation" type="password" class="input" required autocomplete="new-password">
         </div>
+        @if ($requiresKey)
+            <div class="rounded-xl border border-navy-100 bg-navy-50 p-3">
+                <label class="label text-navy-700" for="registration_key">🔑 Chave de cadastro</label>
+                <input id="registration_key" name="registration_key" type="password" class="input bg-white" required autocomplete="off"
+                       placeholder="Informada pelo administrador">
+                <p class="mt-1 text-xs text-slate-500">O cadastro é apenas por convite.</p>
+            </div>
+        @endif
         <button class="btn-primary w-full py-3">Criar conta</button>
         <p class="text-center text-sm text-slate-500">Já tem conta? <a href="{{ route('login') }}" class="font-semibold text-navy-600">Entrar</a></p>
     </form>

@@ -34,12 +34,24 @@ class AuthController extends Controller
     {
         abort_unless($this->registrationOpen(), 403, 'Cadastro desativado.');
 
-        return view('auth.register');
+        return view('auth.register', ['requiresKey' => $this->requiresKey()]);
     }
 
     public function register(Request $request)
     {
         abort_unless($this->registrationOpen(), 403, 'Cadastro desativado.');
+
+        if ($this->requiresKey()) {
+            $request->validate(['registration_key' => ['required', 'string']], [
+                'registration_key.required' => 'Informe a chave de cadastro.',
+            ]);
+
+            if (! hash_equals((string) config('diet.registration_key'), trim((string) $request->input('registration_key')))) {
+                return back()
+                    ->withErrors(['registration_key' => 'Chave de cadastro inválida. Peça a chave ao administrador.'])
+                    ->withInput($request->except(['password', 'password_confirmation', 'registration_key']));
+            }
+        }
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -71,9 +83,17 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    /** O primeiro usuário sempre pode se cadastrar; depois, só se ALLOW_REGISTRATION=true. */
+    /**
+     * Com REGISTRATION_KEY definida: cadastro aberto, mas só com a chave.
+     * Sem chave: só o primeiro usuário, ou todos se ALLOW_REGISTRATION=true.
+     */
     private function registrationOpen(): bool
     {
-        return config('diet.allow_registration') || ! User::query()->exists();
+        return $this->requiresKey() || config('diet.allow_registration') || ! User::query()->exists();
+    }
+
+    private function requiresKey(): bool
+    {
+        return filled(config('diet.registration_key'));
     }
 }
