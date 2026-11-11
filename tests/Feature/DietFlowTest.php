@@ -46,6 +46,13 @@ class DietFlowTest extends TestCase
         $this->assertDatabaseCount('users', 0);
     }
 
+    public function test_bottom_plus_button_is_inside_an_alpine_component(): void
+    {
+        // Sem x-data no <nav>, o Alpine ignora o @click e o "+" não abre o modal
+        $this->actingAs(User::factory()->create())->get('/refeicoes')->assertOk()
+            ->assertSeeInOrder(['<nav x-data', '$store.mealModal.show()', 'aria-label="Adicionar refeição"'], false);
+    }
+
     public function test_guest_is_redirected_to_login(): void
     {
         $this->get('/')->assertRedirect('/login');

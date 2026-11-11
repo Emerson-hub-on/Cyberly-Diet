@@ -44,7 +44,8 @@
 
     {{-- Navegação inferior --}}
     @php($current = request()->route()?->getName())
-    <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-ice-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    {{-- x-data é necessário para o Alpine ativar o @click do botão "+" --}}
+    <nav x-data class="fixed inset-x-0 bottom-0 z-30 border-t border-ice-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <div class="mx-auto grid h-16 max-w-md grid-cols-5 items-center text-[11px] font-medium">
             <a href="{{ route('home') }}" @class(['flex flex-col items-center gap-0.5', 'text-navy-700 font-bold' => $current === 'home' && request('tab', 'calorias') !== 'agua', 'text-slate-400' => ! ($current === 'home' && request('tab', 'calorias') !== 'agua')])>
                 <svg class="size-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.47 3.84a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.06l-8.69-8.69a2.25 2.25 0 0 0-3.18 0l-8.69 8.69a.75.75 0 0 0 1.06 1.06l8.69-8.69Z"/><path d="m12 5.43 8.16 8.16.09.08v6.2c0 1.04-.84 1.88-1.88 1.88H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.63a1.88 1.88 0 0 1-1.88-1.88v-6.2l.09-.08L12 5.43Z"/></svg>
