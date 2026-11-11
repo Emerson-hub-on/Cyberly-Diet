@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+#[Fillable(['name', 'email', 'password', 'calorie_goal', 'water_goal_ml', 'weight_goal_kg', 'height_cm'])]
+#[Hidden(['password', 'remember_token'])]
+class User extends Authenticatable
+{
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable;
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'calorie_goal' => 'integer',
+            'water_goal_ml' => 'integer',
+            'weight_goal_kg' => 'float',
+            'height_cm' => 'integer',
+        ];
+    }
+
+    public function meals(): HasMany
+    {
+        return $this->hasMany(Meal::class);
+    }
+
+    public function weightLogs(): HasMany
+    {
+        return $this->hasMany(WeightLog::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function waterLogs(): HasMany
+    {
+        return $this->hasMany(WaterLog::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    /** Grava um evento no log do usuário. */
+    public function logEvent(string $type, ?object $subject = null, array $payload = []): Event
+    {
+        return $this->events()->create([
+            'type' => $type,
+            'subject_type' => $subject ? $subject::class : null,
+            'subject_id' => $subject->id ?? null,
+            'payload' => $payload,
+        ]);
+    }
+}

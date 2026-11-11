@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../js/**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Paleta principal: azul-marinho + tons gelados */
+    --color-navy-950: #071426;
+    --color-navy-900: #0b1f3a;
+    --color-navy-800: #102a4c;
+    --color-navy-700: #16365f;
+    --color-navy-600: #1f4a7d;
+    --color-navy-500: #2b5f9e;
+    --color-navy-100: #dfe8f3;
+    --color-navy-50: #eef3f9;
+
+    --color-ice-50: #f3f7fb;
+    --color-ice-100: #e7eff7;
+    --color-ice-200: #d3e1ee;
+
+    /* Macronutrientes */
+    --color-protein: #3b82f6;
+    --color-carbs: #06b6d4;
+    --color-fat: #6366f1;
+    --color-sugar: #94a3b8;
+    --color-water: #0ea5e9;
+}
+
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        @apply bg-ice-100 text-slate-800 antialiased;
+    }
+}
+
+@layer components {
+    .card {
+        @apply rounded-2xl border border-ice-200 bg-white p-5 shadow-sm;
+    }
+
+    .input {
+        @apply w-full rounded-xl border border-ice-200 bg-ice-50 px-3.5 py-2.5 text-slate-800 outline-none transition focus:border-navy-500 focus:bg-white focus:ring-2 focus:ring-navy-500/20;
+    }
+
+    .label {
+        @apply mb-1 block text-sm font-medium text-slate-600;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-navy-700 px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-navy-800 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-ice-200 bg-white px-4 py-2.5 font-medium text-navy-700 transition hover:bg-ice-50;
+    }
+
+    .chip {
+        @apply shrink-0 rounded-xl border border-ice-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition;
+    }
+
+    .chip-active {
+        @apply border-navy-600 text-navy-700 ring-1 ring-navy-600;
+    }
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    scrollbar-width: none;
+}
