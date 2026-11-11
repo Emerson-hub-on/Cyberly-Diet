@@ -44,7 +44,13 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'sex' => ['required', 'in:M,F'],
+            'birth_date' => ['required', 'date', 'before:today', 'after:1900-01-01'],
             'password' => ['required', 'confirmed', Password::min(8)],
+        ], [
+            'sex.required' => 'Informe o sexo.',
+            'birth_date.required' => 'Informe a data de nascimento.',
+            'birth_date.before' => 'A data de nascimento deve ser anterior a hoje.',
         ]);
 
         $user = User::create($data);

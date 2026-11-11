@@ -19,15 +19,31 @@ class DietFlowTest extends TestCase
         $this->post('/cadastro', [
             'name' => 'Teste',
             'email' => 'teste@example.com',
+            'sex' => 'M',
+            'birth_date' => '2002-12-11',
             'password' => 'senha-segura',
             'password_confirmation' => 'senha-segura',
         ])->assertRedirect('/');
+
+        $user = User::first();
+        $this->assertSame('M', $user->sex);
+        $this->assertSame('2002-12-11', $user->birth_date->toDateString());
 
         $this->get('/')->assertOk()->assertSee('Calorias consumidas')->assertSee('Nutrientes do dia');
 
         // Cadastro fecha após o primeiro usuário
         auth()->logout();
         $this->get('/cadastro')->assertForbidden();
+    }
+
+    public function test_register_requires_sex_and_birth_date(): void
+    {
+        $this->post('/cadastro', [
+            'name' => 'Teste', 'email' => 'teste@example.com',
+            'password' => 'senha-segura', 'password_confirmation' => 'senha-segura',
+        ])->assertSessionHasErrors(['sex', 'birth_date']);
+
+        $this->assertDatabaseCount('users', 0);
     }
 
     public function test_guest_is_redirected_to_login(): void
