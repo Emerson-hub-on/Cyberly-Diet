@@ -46,15 +46,31 @@ class DashboardController extends Controller
         $caloriesChart = $this->dailySeries($weekStart, $date, $weekMeals, fn ($m) => $m->eaten_at, 'calories');
 
         // ---------- Peso corporal ----------
+        // Um peso por dia (se houver mais de um registro no dia, vale o último), até 60 dias com registro
         $weights = $user->weightLogs()->where('measured_on', '<=', $dayEnd)
-            ->orderByDesc('measured_on')->orderByDesc('id')->limit(30)->get()->reverse()->values();
-        $latestWeight = $weights->last();
+            ->orderByDesc('measured_on')->orderByDesc('id')->limit(300)->get()
+            ->unique(fn ($w) => $w->measured_on->toDateString())
+            ->take(60)->reverse()->values();
+        $latestWeight = $weights->last()
+            ?? $user->weightLogs()->orderByDesc('measured_on')->orderByDesc('id')->first();
         $bmi = ($latestWeight && $user->height_cm)
             ? round($latestWeight->weight_kg / (($user->height_cm / 100) ** 2), 1)
             : null;
+
+        // Histórico diário com a variação em relação ao registro anterior
+        $weightHistory = $weights->map(function ($w, $i) use ($weights) {
+            $prev = $weights[$i - 1] ?? null;
+
+            return [
+                'log' => $w,
+                'diff' => $prev ? round($w->weight_kg - $prev->weight_kg, 1) : null,
+                'days' => $prev ? (int) $prev->measured_on->diffInDays($w->measured_on) : null,
+            ];
+        });
         $weightChart = [
             'labels' => $weights->map(fn ($w) => $w->measured_on->format('d/m'))->all(),
             'values' => $weights->map(fn ($w) => $w->weight_kg)->all(),
+            'diffs' => $weightHistory->map(fn ($h) => $h['diff'] ?? 0)->all(),
         ];
 
         // ---------- Atividade física ----------
@@ -83,6 +99,7 @@ class DashboardController extends Controller
             'goalPct' => $goalPct,
             'latestWeight' => $latestWeight,
             'weights' => $weights,
+            'weightHistory' => $weightHistory,
             'bmi' => $bmi,
             'progress' => $progress->forUser($user, $date),
             'activityMets' => config('diet.activities'),

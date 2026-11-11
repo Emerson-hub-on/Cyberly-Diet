@@ -181,41 +181,87 @@
         </div>
     @endisset
 
-    {{-- Registrar peso --}}
+    {{-- Registrar peso (já preenchido com o último registro salvo) --}}
+    @php($todayLog = $weights->first(fn ($w) => $w->measured_on->isSameDay($date)))
     <form method="POST" action="{{ route('weight.store') }}" class="card space-y-3">
         @csrf
         <h2 class="font-bold text-slate-800">Registrar peso</h2>
+        @if ($latestWeight)
+            <p class="-mt-1 text-xs text-slate-500">
+                Último registro: <b class="text-slate-700">{{ $fmt($latestWeight->weight_kg) }} kg</b> em {{ $latestWeight->measured_on->format('d/m/Y') }}
+            </p>
+        @endif
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="label" for="weight_kg">Peso (kg)</label>
                 <input id="weight_kg" name="weight_kg" type="number" step="0.1" min="20" max="400" inputmode="decimal" class="input" required
-                       value="{{ $latestWeight?->weight_kg }}">
+                       value="{{ old('weight_kg', $latestWeight ? round($latestWeight->weight_kg, 1) : '') }}">
             </div>
             <div>
                 <label class="label" for="measured_on">Data</label>
-                <input id="measured_on" name="measured_on" type="date" class="input" value="{{ $date->toDateString() }}" required>
+                <input id="measured_on" name="measured_on" type="date" class="input" value="{{ old('measured_on', $date->toDateString()) }}" required>
             </div>
         </div>
-        <button class="btn-primary w-full">Salvar peso</button>
+        <button class="btn-primary w-full">{{ $todayLog ? 'Atualizar peso do dia' : 'Salvar peso' }}</button>
+        <p class="text-xs text-slate-400">Um registro por dia: salvar de novo na mesma data atualiza o peso daquele dia.</p>
     </form>
 
-    {{-- Gráfico + histórico --}}
-    <div class="card">
-        <h2 class="mb-3 text-lg font-bold text-slate-800">Evolução do peso (kg)</h2>
-        @if ($weights->isEmpty())
-            <p class="py-6 text-center text-sm text-slate-400">Registre seu peso para ver o gráfico.</p>
-        @else
+    @if ($weights->isEmpty())
+        <div class="card py-8 text-center text-sm text-slate-400">Registre seu peso para ver o histórico e os gráficos.</div>
+    @else
+        {{-- Gráfico: evolução --}}
+        <div class="card">
+            <h2 class="mb-3 text-lg font-bold text-slate-800">Evolução do peso (kg)</h2>
             <div class="h-56"><canvas id="chart-weight"></canvas></div>
-            <ul class="mt-4 divide-y divide-ice-100 text-sm">
-                @foreach ($weights->reverse()->take(5) as $w)
-                    <li class="flex items-center justify-between py-2">
-                        <span class="text-slate-500">{{ $w->measured_on->format('d/m/Y') }}</span>
-                        <span class="flex items-center gap-3 font-semibold text-slate-700">{{ $fmt($w->weight_kg) }} kg
-                            <form method="POST" action="{{ route('weight.destroy', $w) }}" onsubmit="return confirm('Remover este registro?')">@csrf @method('DELETE')<button class="text-slate-300 hover:text-rose-500" aria-label="Remover">✕</button></form>
-                        </span>
+        </div>
+
+        {{-- Gráfico: variação a cada registro --}}
+        <div class="card">
+            <h2 class="text-lg font-bold text-slate-800">Variação diária (kg)</h2>
+            <p class="mb-3 text-xs text-slate-500">
+                Barra <span class="font-semibold text-emerald-600">verde</span> = {{ $losing || ! $p['goal'] ? 'baixou' : 'subiu' }} (rumo à meta) ·
+                <span class="font-semibold text-rose-500">vermelha</span> = {{ $losing || ! $p['goal'] ? 'aumentou' : 'baixou' }}
+            </p>
+            <div class="h-48"><canvas id="chart-weight-diff"></canvas></div>
+        </div>
+
+        {{-- Histórico diário --}}
+        <div class="card" x-data="{ all: false }">
+            <h2 class="mb-2 text-lg font-bold text-slate-800">Histórico de peso diário</h2>
+            <ul class="divide-y divide-ice-100 text-sm">
+                @foreach ($weightHistory->reverse()->values() as $i => $h)
+                    @php([$w, $d] = [$h['log'], $h['diff']])
+                    @php($good = $d !== null && $d != 0 && (($d < 0) === ($losing || ! $p['goal'])))
+                    <li class="flex items-center justify-between gap-3 py-2.5" @if ($i >= 10) x-show="all" x-cloak @endif>
+                        <div class="min-w-0">
+                            <p class="font-medium text-slate-700">{{ ucfirst($w->measured_on->translatedFormat('D')) }}, {{ $w->measured_on->format('d/m/Y') }}</p>
+                            @if ($h['days'] && $h['days'] > 1)
+                                <p class="text-[11px] text-slate-400">{{ $h['days'] }} dias desde o registro anterior</p>
+                            @endif
+                        </div>
+                        <div class="flex shrink-0 items-center gap-3">
+                            @if ($d === null)
+                                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">início</span>
+                            @elseif ($d == 0)
+                                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">= 0,0</span>
+                            @else
+                                <span @class(['rounded-full px-2 py-0.5 text-xs font-semibold', 'bg-emerald-50 text-emerald-700' => $good, 'bg-rose-50 text-rose-600' => ! $good])>
+                                    {{ $d < 0 ? '▼' : '▲' }} {{ $d > 0 ? '+' : '' }}{{ $fmt($d) }}
+                                </span>
+                            @endif
+                            <span class="w-16 text-right font-semibold text-slate-800">{{ $fmt($w->weight_kg) }} kg</span>
+                            <form method="POST" action="{{ route('weight.destroy', $w) }}" onsubmit="return confirm('Remover o registro de {{ $w->measured_on->format('d/m') }}?')">
+                                @csrf @method('DELETE')
+                                <button class="text-slate-300 hover:text-rose-500" aria-label="Remover">✕</button>
+                            </form>
+                        </div>
                     </li>
                 @endforeach
             </ul>
-        @endif
-    </div>
+            @if ($weightHistory->count() > 10)
+                <button type="button" class="mt-2 w-full text-center text-sm font-semibold text-navy-600" @click="all = !all"
+                        x-text="all ? 'Mostrar menos ▲' : 'Ver todos os {{ $weightHistory->count() }} registros ▼'"></button>
+            @endif
+        </div>
+    @endif
 </section>

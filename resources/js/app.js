@@ -207,10 +207,14 @@ Alpine.data('dashboard', (initialTab, charts) => ({
                 { label: 'Kcal', data: charts.calories.values, backgroundColor: COLORS.navy, borderRadius: 8, maxBarThickness: 28 },
                 goalLine(charts.calories.labels, charts.calories.goal, 'Meta'),
             ]),
-            peso: () => lineChart('chart-weight', charts.weight.labels, [
-                { label: 'Peso (kg)', data: charts.weight.values, borderColor: COLORS.navy, backgroundColor: COLORS.navySoft, fill: true, tension: 0.35, pointRadius: 3 },
-                ...(charts.weight.goal ? [goalLine(charts.weight.labels, charts.weight.goal, 'Meta')] : []),
-            ]),
+            peso: () => {
+                const w = charts.weight;
+                lineChart('chart-weight', w.labels, [
+                    { label: 'Peso (kg)', data: w.values, borderColor: COLORS.navy, backgroundColor: COLORS.navySoft, fill: true, tension: 0.35, pointRadius: 3 },
+                    ...(w.goal ? [goalLine(w.labels, w.goal, 'Meta')] : []),
+                ]);
+                weightDiffChart('chart-weight-diff', w);
+            },
             atividade: () => barChart('chart-activity', charts.activity.labels, [
                 { label: 'Minutos', data: charts.activity.values, backgroundColor: COLORS.indigo, borderRadius: 8, maxBarThickness: 28 },
                 { label: 'Kcal gastas', data: charts.activity.kcal, backgroundColor: COLORS.skySoft, borderColor: COLORS.sky, borderWidth: 1, borderRadius: 8, maxBarThickness: 28 },
@@ -254,6 +258,43 @@ const baseOptions = {
 function barChart(id, labels, datasets) {
     const el = document.getElementById(id);
     if (el) new Chart(el, { type: 'bar', data: { labels, datasets }, options: baseOptions });
+}
+
+/** Barras com a variação de cada registro em relação ao anterior (verde = rumo à meta). */
+function weightDiffChart(id, w) {
+    const el = document.getElementById(id);
+    if (!el || !w.values.length) return;
+
+    const current = w.values[w.values.length - 1];
+    const lossIsGood = !(w.goal && current < w.goal); // meta acima do peso atual = objetivo é ganhar
+    const colorFor = (v) => (v === 0 ? '#cbd5e1' : (v < 0) === lossIsGood ? '#10b981' : '#f43f5e');
+    const fmt = (v) => `${v > 0 ? '+' : ''}${v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg`;
+
+    new Chart(el, {
+        type: 'bar',
+        data: {
+            labels: w.labels,
+            datasets: [{
+                label: 'Variação (kg)',
+                data: w.diffs,
+                backgroundColor: w.diffs.map(colorFor),
+                borderRadius: 6,
+                maxBarThickness: 22,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: (ctx) => (ctx.dataIndex === 0 ? 'primeiro registro' : fmt(ctx.parsed.y)) } },
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: '#e7eff7' }, ticks: { callback: (v) => fmt(v) } },
+            },
+        },
+    });
 }
 
 function lineChart(id, labels, datasets) {

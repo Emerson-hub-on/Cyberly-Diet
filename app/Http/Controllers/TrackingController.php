@@ -22,10 +22,25 @@ class TrackingController extends Controller
             'note' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $log = $request->user()->weightLogs()->create($data);
-        $request->user()->logEvent('weight.logged', $log, ['weight_kg' => $log->weight_kg]);
+        $user = $request->user();
+        $date = CarbonImmutable::parse($data['measured_on'])->startOfDay();
 
-        return $this->backTo('peso', $data['measured_on'], 'Peso registrado.');
+        // Um registro por dia: salvar de novo na mesma data atualiza o peso daquele dia
+        $log = $user->weightLogs()->whereBetween('measured_on', [$date, $date->endOfDay()])
+            ->orderByDesc('id')->first();
+        $updated = (bool) $log;
+
+        if ($log) {
+            $log->update(['weight_kg' => $data['weight_kg'], 'note' => $data['note'] ?? $log->note]);
+        } else {
+            $log = $user->weightLogs()->create(['measured_on' => $date] + $data);
+        }
+
+        $user->logEvent('weight.logged', $log, ['weight_kg' => $log->weight_kg, 'date' => $date->toDateString(), 'updated' => $updated]);
+
+        $msg = sprintf('Peso de %s %s: %s kg.', $date->format('d/m'), $updated ? 'atualizado' : 'registrado', number_format($log->weight_kg, 1, ',', '.'));
+
+        return $this->backTo('peso', $date->toDateString(), $msg);
     }
 
     public function destroyWeight(Request $request, WeightLog $log)
