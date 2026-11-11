@@ -53,6 +53,15 @@ class DietFlowTest extends TestCase
             ->assertSeeInOrder(['<nav x-data', '$store.mealModal.show()', 'aria-label="Adicionar refeição"'], false);
     }
 
+    public function test_date_navigator_has_calendar_picker_keeping_selected_day(): void
+    {
+        $this->actingAs(User::factory()->create())->get('/?data=2026-11-05&tab=peso')->assertOk()
+            ->assertSee('aria-label="Escolher data"', false)
+            ->assertSee('value="2026-11-05"', false)
+            ->assertSee('window.location = link($event.target.value)', false)
+            ->assertSee('05/11/2026');
+    }
+
     public function test_guest_is_redirected_to_login(): void
     {
         $this->get('/')->assertRedirect('/login');
