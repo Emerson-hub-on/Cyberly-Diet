@@ -101,44 +101,7 @@
                 </div>
 
                 @forelse ($meals as $meal)
-                    <div x-data="{ open: false }" class="border-t border-ice-100 py-3 first:border-t-0 first:pt-0">
-                        <div class="flex gap-3">
-                            @if ($meal->photo_path)
-                                <img src="{{ route('meals.photo', $meal) }}" alt="" loading="lazy" class="size-16 shrink-0 rounded-xl object-cover">
-                            @endif
-                            <button type="button" class="min-w-0 flex-1 text-left" @click="open = !open">
-                                <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-navy-600">
-                                    {{ $meal->type_label }} <span class="font-normal text-slate-400">{{ $meal->eaten_at->format('H:i') }}</span>
-                                </div>
-                                <p class="truncate font-medium text-slate-800">{{ $meal->title }}</p>
-                                <p class="text-sm text-slate-500">
-                                    <span class="font-semibold text-slate-700">{{ $meal->calories }} Kcal</span>
-                                    · {{ $meal->carbs_g }} g Carb. · {{ $meal->protein_g }} g Prot. · {{ $meal->fat_g }} g Gord. · {{ $meal->sugar_g }} g Açúcar
-                                </p>
-                                <span class="text-xs font-medium text-navy-600" x-text="open ? 'Ocultar detalhes ▲' : 'Mais detalhes ▼'"></span>
-                            </button>
-                        </div>
-
-                        {{-- Detalhamento por alimento identificado na foto --}}
-                        <x-meal-items :items="$meal->items" class="mt-3" />
-
-                        <div x-show="open" x-transition x-cloak class="mt-2 space-y-2 rounded-xl border border-ice-100 p-3 text-sm">
-                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                                <span>Carbo {{ $meal->carbs_pct }}% das kcal</span>
-                                <span>Proteína {{ $meal->protein_pct }}%</span>
-                                <span>Gordura {{ $meal->fat_pct }}%</span>
-                                <span>Fibras {{ $meal->fiber_g }} g</span>
-                                <span>{{ $meal->goal_pct }}% da meta diária</span>
-                            </div>
-                            @if ($meal->ai_notes)
-                                <p class="text-xs text-slate-500">💡 {{ $meal->ai_notes }}</p>
-                            @endif
-                            <form method="POST" action="{{ route('meals.destroy', $meal) }}" onsubmit="return confirm('Remover esta refeição?')" class="text-right">
-                                @csrf @method('DELETE')
-                                <button class="text-xs font-semibold text-rose-500">Remover refeição</button>
-                            </form>
-                        </div>
-                    </div>
+                    <x-meal-card :meal="$meal" class="border-t border-ice-100 py-2 first:border-t-0 first:pt-0" />
                 @empty
                     <div class="py-6 text-center text-sm text-slate-400">
                         Nenhuma refeição registrada neste dia.<br>Toque no <b class="text-navy-600">+</b> e fotografe seu prato.

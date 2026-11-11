@@ -6,6 +6,7 @@
         'activity.logged' => ['🏃', 'Atividade registrada'],
         'water.logged' => ['💧', 'Água registrada'],
         'goals.updated' => ['🎯', 'Metas atualizadas'],
+        'password.changed' => ['🔒', 'Senha alterada'],
         'user.registered' => ['✨', 'Conta criada'],
     ];
 @endphp
@@ -62,6 +63,40 @@
             <p class="text-xs text-slate-400">Altura, sexo e idade são usados para calcular seu gasto calórico diário (metabolismo basal) e a previsão de quando você atinge o peso meta.</p>
             <button class="btn-primary w-full">Salvar metas</button>
         </form>
+
+        {{-- Alterar senha --}}
+        @php($pwErrors = $errors->getBag('password'))
+        <div x-data="{ open: {{ $pwErrors->any() ? 'true' : 'false' }}, show: false }" id="senha" class="card">
+            <button type="button" @click="open = !open" class="flex w-full items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-800">Alterar senha</h2>
+                <span class="text-sm font-semibold text-navy-600" x-text="open ? 'Fechar ▲' : 'Alterar ▼'"></span>
+            </button>
+
+            <form x-show="open" x-cloak x-transition method="POST" action="{{ route('password.update') }}" class="mt-4 space-y-3">
+                @csrf @method('PUT')
+
+                @if ($pwErrors->any())
+                    <p class="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{{ $pwErrors->first() }}</p>
+                @endif
+
+                <div>
+                    <label class="label" for="current_password">Senha atual</label>
+                    <input id="current_password" name="current_password" :type="show ? 'text' : 'password'" class="input" required autocomplete="current-password">
+                </div>
+                <div>
+                    <label class="label" for="new_password">Nova senha <span class="font-normal text-slate-400">(mín. 8 caracteres)</span></label>
+                    <input id="new_password" name="password" :type="show ? 'text' : 'password'" minlength="8" class="input" required autocomplete="new-password">
+                </div>
+                <div>
+                    <label class="label" for="password_confirmation">Confirmar nova senha</label>
+                    <input id="password_confirmation" name="password_confirmation" :type="show ? 'text' : 'password'" minlength="8" class="input" required autocomplete="new-password">
+                </div>
+                <label class="flex items-center gap-2 text-sm text-slate-600">
+                    <input type="checkbox" x-model="show" class="size-4 rounded accent-navy-700"> Mostrar senhas
+                </label>
+                <button class="btn-primary w-full">Salvar nova senha</button>
+            </form>
+        </div>
 
         <div id="eventos" class="card">
             <h2 class="mb-3 text-lg font-bold text-slate-800">Registro de eventos</h2>
