@@ -12,3 +12,6 @@
 .env.*
 !.env.example
 tests
+/dist
+/postgres
+.env.vercel
