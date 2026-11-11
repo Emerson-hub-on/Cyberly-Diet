@@ -112,29 +112,24 @@
                                 </div>
                                 <p class="truncate font-medium text-slate-800">{{ $meal->title }}</p>
                                 <p class="text-sm text-slate-500">
-                                    <span class="font-semibold text-slate-700">{{ $meal->calories }} kcal</span>
-                                    · P {{ $meal->protein_g }}g · C {{ $meal->carbs_g }}g · G {{ $meal->fat_g }}g
+                                    <span class="font-semibold text-slate-700">{{ $meal->calories }} Kcal</span>
+                                    · {{ $meal->carbs_g }} g Carb. · {{ $meal->protein_g }} g Prot. · {{ $meal->fat_g }} g Gord. · {{ $meal->sugar_g }} g Açúcar
                                 </p>
+                                <span class="text-xs font-medium text-navy-600" x-text="open ? 'Ocultar detalhes ▲' : 'Mais detalhes ▼'"></span>
                             </button>
                         </div>
-                        <div x-show="open" x-transition x-cloak class="mt-3 space-y-2 rounded-xl bg-ice-50 p-3 text-sm">
+
+                        {{-- Detalhamento por alimento identificado na foto --}}
+                        <x-meal-items :items="$meal->items" class="mt-3" />
+
+                        <div x-show="open" x-transition x-cloak class="mt-2 space-y-2 rounded-xl border border-ice-100 p-3 text-sm">
                             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                                <span>Carbo {{ $meal->carbs_pct }}% das kcal</span>
                                 <span>Proteína {{ $meal->protein_pct }}%</span>
-                                <span>Carbo {{ $meal->carbs_pct }}%</span>
                                 <span>Gordura {{ $meal->fat_pct }}%</span>
-                                <span>Açúcar {{ $meal->sugar_g }}g</span>
-                                <span>{{ $meal->goal_pct }}% da meta</span>
+                                <span>Fibras {{ $meal->fiber_g }} g</span>
+                                <span>{{ $meal->goal_pct }}% da meta diária</span>
                             </div>
-                            @if ($meal->items)
-                                <ul class="divide-y divide-ice-200">
-                                    @foreach ($meal->items as $item)
-                                        <li class="flex justify-between py-1.5">
-                                            <span class="text-slate-700">{{ $item['name'] }} <span class="text-slate-400">({{ $item['portion'] }})</span></span>
-                                            <span class="shrink-0 pl-2 text-slate-500">{{ round($item['calories']) }} kcal</span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @endif
                             @if ($meal->ai_notes)
                                 <p class="text-xs text-slate-500">💡 {{ $meal->ai_notes }}</p>
                             @endif

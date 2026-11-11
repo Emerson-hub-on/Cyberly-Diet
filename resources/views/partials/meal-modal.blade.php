@@ -97,6 +97,20 @@
                     <div class="rounded-xl bg-indigo-50 p-2"><p class="text-base font-bold text-fat" x-text="result.fat_g + 'g'"></p>Gorduras<p class="text-slate-400" x-text="result.fat_pct + '%'"></p></div>
                     <div class="rounded-xl bg-slate-50 p-2"><p class="text-base font-bold text-slate-500" x-text="result.sugar_g + 'g'"></p>Açúcar</div>
                 </div>
+                <ul x-show="result.items && result.items.length" class="divide-y divide-ice-100 rounded-xl bg-ice-50 px-3">
+                    <template x-for="item in result.items">
+                        <li class="py-2">
+                            <p class="text-sm font-medium text-slate-800"><span x-text="item.name"></span> <span class="font-normal text-slate-400" x-text="'(' + item.portion + ')'"></span></p>
+                            <p class="mt-0.5 text-xs text-slate-500">
+                                <b class="text-slate-700" x-text="Math.round(item.calories) + ' Kcal'"></b>
+                                · <b class="text-carbs" x-text="fmt(item.carbs_g) + ' g'"></b> Carb.
+                                · <b class="text-protein" x-text="fmt(item.protein_g) + ' g'"></b> Prot.
+                                · <b class="text-fat" x-text="fmt(item.fat_g) + ' g'"></b> Gordura
+                                · <b class="text-slate-600" x-text="fmt(item.sugar_g) + ' g'"></b> Açúcar
+                            </p>
+                        </li>
+                    </template>
+                </ul>
                 <p class="text-xs text-slate-400">Estimativa feita por IA a partir da foto (confiança: <span x-text="result.confidence"></span>). Os valores são aproximados.</p>
                 <button type="button" class="btn-primary w-full py-3" @click="finish">Ver no painel</button>
             </div>

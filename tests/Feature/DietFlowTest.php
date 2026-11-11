@@ -84,7 +84,12 @@ class DietFlowTest extends TestCase
 
         $this->assertDatabaseHas('events', ['user_id' => $user->id, 'type' => 'meal.created', 'subject_id' => $meal->id]);
 
-        $this->get('/')->assertOk()->assertSee('Arroz, feijão e frango')->assertSee('600 Kcal');
+        $response->assertJsonPath('meal.items.0.name', 'Arroz');
+
+        // Detalhamento por alimento: "Arroz (150 g)  200 Kcal · 44 g Carb. · 4 g Prot. · 0,5 g Gordura · 0 g Açúcar"
+        $this->get('/')->assertOk()->assertSee('Arroz, feijão e frango')->assertSee('600 Kcal')
+            ->assertSeeInOrder(['Arroz', '(150 g)', '200 Kcal', '44 g', 'Carb.', '4 g', 'Prot.', '0,5 g', 'Gordura', '0 g', 'Açúcar']);
+        $this->get('/refeicoes')->assertSeeInOrder(['Arroz', '(150 g)', '200 Kcal', '44 g', 'Carb.']);
         $this->get("/refeicoes/{$meal->id}/foto")->assertOk();
         $this->get('/refeicoes')->assertOk()->assertSee('Arroz, feijão e frango');
         $this->get('/perfil')->assertOk()->assertSee('Refeição registrada');

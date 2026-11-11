@@ -152,6 +152,10 @@ Alpine.data('mealForm', (defaultDate) => ({
     finish() {
         window.location.href = this.redirect || '/';
     },
+
+    fmt(value) {
+        return Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    },
 }));
 
 /* ------------------------------------------------------------------ */
