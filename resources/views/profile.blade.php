@@ -46,7 +46,20 @@
                     <label class="label" for="height_cm">Altura (cm)</label>
                     <input id="height_cm" name="height_cm" type="number" min="50" max="250" class="input" value="{{ old('height_cm', $user->height_cm) }}">
                 </div>
+                <div>
+                    <label class="label" for="sex">Sexo</label>
+                    <select id="sex" name="sex" class="input">
+                        <option value="">—</option>
+                        <option value="M" @selected(old('sex', $user->sex) === 'M')>Masculino</option>
+                        <option value="F" @selected(old('sex', $user->sex) === 'F')>Feminino</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label" for="birth_date">Nascimento</label>
+                    <input id="birth_date" name="birth_date" type="date" class="input" value="{{ old('birth_date', $user->birth_date?->toDateString()) }}">
+                </div>
             </div>
+            <p class="text-xs text-slate-400">Altura, sexo e idade são usados para calcular seu gasto calórico diário (metabolismo basal) e a previsão de quando você atinge o peso meta.</p>
             <button class="btn-primary w-full">Salvar metas</button>
         </form>
 

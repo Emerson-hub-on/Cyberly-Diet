@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\WaterLog;
 use App\Models\WeightLog;
+use App\Services\WeightProgress;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
@@ -43,12 +44,19 @@ class TrackingController extends Controller
             'calories_burned' => ['nullable', 'integer', 'between:0,20000'],
             'performed_on' => ['required', 'date'],
         ]);
-        $data['calories_burned'] ??= 0;
+        $user = $request->user();
+        $data['activity'] = trim($data['activity']);
+        $data['met'] = WeightProgress::metFor($data['activity']);
 
-        $log = $request->user()->activityLogs()->create($data);
-        $request->user()->logEvent('activity.logged', $log, $data);
+        // Sem kcal informada: calcula por MET × peso × horas, com o peso mais recente até a data
+        $weight = WeightProgress::weightOn($user, CarbonImmutable::parse($data['performed_on']))
+            ?? WeightProgress::FALLBACK_WEIGHT_KG;
+        $data['calories_burned'] ??= WeightProgress::activityCalories($data['met'], (int) $data['duration_min'], $weight);
 
-        return $this->backTo('atividade', $data['performed_on'], 'Atividade registrada.');
+        $log = $user->activityLogs()->create($data);
+        $user->logEvent('activity.logged', $log, $data + ['weight_kg_used' => $weight]);
+
+        return $this->backTo('atividade', $data['performed_on'], "{$log->activity}: {$log->duration_min} min, −{$log->calories_burned} kcal.");
     }
 
     public function destroyActivity(Request $request, ActivityLog $log)
@@ -90,6 +98,8 @@ class TrackingController extends Controller
             'water_goal_ml' => ['required', 'integer', 'between:250,10000'],
             'weight_goal_kg' => ['nullable', 'numeric', 'between:20,400'],
             'height_cm' => ['nullable', 'integer', 'between:50,250'],
+            'sex' => ['nullable', 'in:M,F'],
+            'birth_date' => ['nullable', 'date', 'before:today', 'after:1900-01-01'],
         ]);
 
         $request->user()->update($data);

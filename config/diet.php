@@ -39,6 +39,35 @@ return [
         'jantar' => 'Jantar',
     ],
 
+    /*
+    | Intensidade (MET) de cada atividade. Calorias = MET × peso (kg) × horas.
+    | Valores de referência do Compendium of Physical Activities (intensidade moderada).
+    */
+    'activities' => [
+        'Academia' => 5.0,
+        'Musculação' => 5.0,
+        'Caminhada' => 3.5,
+        'Caminhada rápida' => 4.3,
+        'Corrida' => 9.8,
+        'Bicicleta' => 7.5,
+        'Bicicleta ergométrica' => 6.8,
+        'Natação' => 7.0,
+        'Funcional' => 8.0,
+        'Crossfit' => 8.0,
+        'HIIT' => 8.0,
+        'Futebol' => 7.0,
+        'Dança' => 5.0,
+        'Pilates' => 3.0,
+        'Yoga' => 2.5,
+        'Alongamento' => 2.3,
+        'Escada / Step' => 8.8,
+        'Elíptico' => 5.0,
+    ],
+    'default_met' => 4.0,
+
+    // ≈ 7.700 kcal de déficit para perder 1 kg de gordura corporal
+    'kcal_per_kg' => 7700,
+
     'defaults' => [
         'calorie_goal' => 2000,
         'water_goal_ml' => 2000,

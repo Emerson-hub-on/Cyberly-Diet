@@ -152,67 +152,7 @@
             </div>
         </section>
 
-        {{-- ==================== PESO CORPORAL ==================== --}}
-        <section x-show="tab === 'peso'" x-cloak class="space-y-4">
-            <div class="card">
-                <h2 class="text-lg font-bold text-slate-800">Peso atual</h2>
-                @if ($latestWeight)
-                    @php($prevWeight = $weights->count() > 1 ? $weights[$weights->count() - 2] : null)
-                    <p class="mt-1 text-3xl font-light text-slate-800">{{ number_format($latestWeight->weight_kg, 1, ',', '.') }} kg</p>
-                    <div class="mt-2 flex flex-wrap gap-2 text-xs">
-                        @if ($prevWeight)
-                            @php($diff = round($latestWeight->weight_kg - $prevWeight->weight_kg, 1))
-                            <span class="rounded-full bg-ice-100 px-2.5 py-1 text-slate-600">{{ $diff > 0 ? '+' : '' }}{{ number_format($diff, 1, ',', '.') }} kg desde a última pesagem</span>
-                        @endif
-                        @if ($bmi)
-                            <span class="rounded-full bg-ice-100 px-2.5 py-1 text-slate-600">IMC {{ number_format($bmi, 1, ',', '.') }}</span>
-                        @endif
-                        @if (auth()->user()->weight_goal_kg)
-                            <span class="rounded-full bg-navy-50 px-2.5 py-1 text-navy-700">Meta {{ number_format(auth()->user()->weight_goal_kg, 1, ',', '.') }} kg</span>
-                        @endif
-                    </div>
-                    <p class="mt-2 text-xs text-slate-400">Registrado em {{ $latestWeight->measured_on->format('d/m/Y') }}</p>
-                @else
-                    <p class="mt-1 text-sm text-slate-400">Nenhuma pesagem registrada ainda.</p>
-                @endif
-            </div>
-
-            <form method="POST" action="{{ route('weight.store') }}" class="card space-y-3">
-                @csrf
-                <h2 class="font-bold text-slate-800">Registrar peso</h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="label" for="weight_kg">Peso (kg)</label>
-                        <input id="weight_kg" name="weight_kg" type="number" step="0.1" min="20" max="400" inputmode="decimal" class="input" required
-                               value="{{ $latestWeight?->weight_kg }}">
-                    </div>
-                    <div>
-                        <label class="label" for="measured_on">Data</label>
-                        <input id="measured_on" name="measured_on" type="date" class="input" value="{{ $date->toDateString() }}" required>
-                    </div>
-                </div>
-                <button class="btn-primary w-full">Salvar peso</button>
-            </form>
-
-            <div class="card">
-                <h2 class="mb-3 text-lg font-bold text-slate-800">Evolução do peso (kg)</h2>
-                @if ($weights->isEmpty())
-                    <p class="py-6 text-center text-sm text-slate-400">Registre seu peso para ver o gráfico.</p>
-                @else
-                    <div class="h-56"><canvas id="chart-weight"></canvas></div>
-                    <ul class="mt-4 divide-y divide-ice-100 text-sm">
-                        @foreach ($weights->reverse()->take(5) as $w)
-                            <li class="flex items-center justify-between py-2">
-                                <span class="text-slate-500">{{ $w->measured_on->format('d/m/Y') }}</span>
-                                <span class="flex items-center gap-3 font-semibold text-slate-700">{{ number_format($w->weight_kg, 1, ',', '.') }} kg
-                                    <form method="POST" action="{{ route('weight.destroy', $w) }}" onsubmit="return confirm('Remover este registro?')">@csrf @method('DELETE')<button class="text-slate-300 hover:text-rose-500" aria-label="Remover">✕</button></form>
-                                </span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        </section>
+        @include('partials.tab-weight')
 
         {{-- ==================== ATIVIDADE FÍSICA ==================== --}}
         <section x-show="tab === 'atividade'" x-cloak class="space-y-4">
@@ -233,7 +173,7 @@
                         @foreach ($activities as $a)
                             <li class="flex items-center justify-between py-2">
                                 <span class="font-medium text-slate-700">{{ $a->activity }}</span>
-                                <span class="flex items-center gap-3 text-slate-500">{{ $a->duration_min }} min · {{ $a->calories_burned }} kcal
+                                <span class="flex items-center gap-3 text-slate-500">{{ $a->duration_min }} min · <b class="text-indigo-600">−{{ $a->calories_burned }} kcal</b>
                                     <form method="POST" action="{{ route('activity.destroy', $a) }}" onsubmit="return confirm('Remover esta atividade?')">@csrf @method('DELETE')<button class="text-slate-300 hover:text-rose-500" aria-label="Remover">✕</button></form>
                                 </span>
                             </li>
@@ -242,15 +182,16 @@
                 @endif
             </div>
 
-            <form method="POST" action="{{ route('activity.store') }}" class="card space-y-3">
+            <form method="POST" action="{{ route('activity.store') }}" class="card space-y-3"
+                  x-data="activityForm(@js($activityMets), {{ $defaultMet }}, {{ $weightForActivity }})">
                 @csrf
                 <h2 class="font-bold text-slate-800">Registrar atividade</h2>
                 <input type="hidden" name="performed_on" value="{{ $date->toDateString() }}">
                 <div>
                     <label class="label" for="activity">Atividade</label>
-                    <input id="activity" name="activity" list="activity-list" class="input" placeholder="Ex.: Caminhada" required maxlength="60">
+                    <input id="activity" name="activity" list="activity-list" class="input" placeholder="Ex.: Academia" required maxlength="60" x-model="activity">
                     <datalist id="activity-list">
-                        @foreach (['Caminhada', 'Corrida', 'Musculação', 'Bicicleta', 'Natação', 'Funcional', 'Yoga', 'Pilates', 'Futebol', 'Dança', 'Crossfit', 'Alongamento'] as $opt)
+                        @foreach (array_keys($activityMets) as $opt)
                             <option value="{{ $opt }}">
                         @endforeach
                     </datalist>
@@ -258,13 +199,18 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="label" for="duration_min">Duração (min)</label>
-                        <input id="duration_min" name="duration_min" type="number" min="1" max="1440" inputmode="numeric" class="input" required>
+                        <input id="duration_min" name="duration_min" type="number" min="1" max="1440" inputmode="numeric" class="input" required x-model.number="minutes">
                     </div>
                     <div>
                         <label class="label" for="calories_burned">Kcal gastas</label>
-                        <input id="calories_burned" name="calories_burned" type="number" min="0" inputmode="numeric" class="input" placeholder="opcional">
+                        <input id="calories_burned" name="calories_burned" type="number" min="0" inputmode="numeric" class="input" :placeholder="estimate ? 'auto: ' + estimate : 'automático'">
                     </div>
                 </div>
+                <div x-show="estimate" x-cloak class="rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-800">
+                    <b x-text="(activity || 'Atividade') + ': ' + minutes + ' min'"></b> → <b x-text="'−' + estimate + ' kcal'"></b>
+                    <p class="text-xs text-indigo-600/80" x-text="'MET ' + met.toLocaleString('pt-BR') + ' × ' + weight.toLocaleString('pt-BR') + ' kg × ' + (minutes / 60).toLocaleString('pt-BR', {maximumFractionDigits: 2}) + ' h' + (known ? '' : ' (atividade não cadastrada: intensidade média)')"></p>
+                </div>
+                <p class="text-xs text-slate-400">Deixe "Kcal gastas" em branco para calcular automaticamente pelo seu peso ({{ number_format($weightForActivity, 1, ',', '.') }} kg).</p>
                 <button class="btn-primary w-full">Salvar atividade</button>
             </form>
 

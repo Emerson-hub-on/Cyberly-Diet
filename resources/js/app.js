@@ -155,6 +155,28 @@ Alpine.data('mealForm', (defaultDate) => ({
 }));
 
 /* ------------------------------------------------------------------ */
+/* Atividade: estimativa de calorias (MET × peso × horas)             */
+/* ------------------------------------------------------------------ */
+const normalize = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+Alpine.data('activityForm', (mets, defaultMet, weight) => ({
+    activity: '',
+    minutes: '',
+    weight,
+    get known() {
+        return Object.keys(mets).some((name) => normalize(name) === normalize(this.activity));
+    },
+    get met() {
+        const key = Object.keys(mets).find((name) => normalize(name) === normalize(this.activity));
+        return key ? mets[key] : defaultMet;
+    },
+    get estimate() {
+        if (!this.activity || !this.minutes) return 0;
+        return Math.round(this.met * this.weight * (this.minutes / 60));
+    },
+}));
+
+/* ------------------------------------------------------------------ */
 /* Dashboard: abas + gráficos                                         */
 /* ------------------------------------------------------------------ */
 Alpine.data('dashboard', (initialTab, charts) => ({

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\WeightProgress;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ class DashboardController extends Controller
 {
     private const TABS = ['calorias', 'peso', 'atividade', 'agua'];
 
-    public function index(Request $request)
+    public function index(Request $request, WeightProgress $progress)
     {
         $user = $request->user();
         $tab = in_array($request->query('tab'), self::TABS, true) ? $request->query('tab') : 'calorias';
@@ -83,6 +84,10 @@ class DashboardController extends Controller
             'latestWeight' => $latestWeight,
             'weights' => $weights,
             'bmi' => $bmi,
+            'progress' => $progress->forUser($user, $date),
+            'activityMets' => config('diet.activities'),
+            'defaultMet' => config('diet.default_met'),
+            'weightForActivity' => $latestWeight?->weight_kg ?? WeightProgress::FALLBACK_WEIGHT_KG,
             'activities' => $activities,
             'waterLogs' => $waterLogs,
             'waterTotal' => $waterTotal,

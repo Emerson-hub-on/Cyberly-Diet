@@ -14,6 +14,7 @@ class ActivityLog extends Model
             'performed_on' => 'date',
             'duration_min' => 'integer',
             'calories_burned' => 'integer',
+            'met' => 'float',
         ];
     }
 }
