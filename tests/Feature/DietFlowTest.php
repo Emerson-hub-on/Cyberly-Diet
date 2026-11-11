@@ -62,6 +62,24 @@ class DietFlowTest extends TestCase
             ->assertSee('05/11/2026');
     }
 
+    public function test_app_is_installable_from_profile(): void
+    {
+        $this->actingAs(User::factory()->create())->get('/perfil')->assertOk()
+            ->assertSee('Instalar aplicativo')
+            ->assertSee('Adicionar à Tela de Início')
+            ->assertSee('<link rel="manifest" href="/manifest.webmanifest">', false)
+            ->assertSee('<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">', false);
+
+        $manifest = json_decode(file_get_contents(public_path('manifest.webmanifest')), true);
+        $this->assertSame('standalone', $manifest['display']);
+        foreach ($manifest['icons'] as $icon) {
+            $this->assertFileExists(public_path(ltrim($icon['src'], '/')));
+        }
+        $this->assertFileExists(public_path('icons/apple-touch-icon.png'));
+        $this->assertStringContainsString('Sem conexão com internet', file_get_contents(public_path('offline.html')));
+        $this->assertStringContainsString('/offline.html', file_get_contents(public_path('sw.js')));
+    }
+
     public function test_guest_is_redirected_to_login(): void
     {
         $this->get('/')->assertRedirect('/login');

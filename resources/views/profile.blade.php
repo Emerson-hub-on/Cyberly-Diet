@@ -27,6 +27,47 @@
             </form>
         </div>
 
+        {{-- Instalar aplicativo (PWA) --}}
+        <div x-data="installApp" id="instalar" class="card">
+            <div class="flex items-center gap-3">
+                <img src="/icons/icon-192.png" alt="" class="size-12 shrink-0 rounded-xl">
+                <div class="min-w-0 flex-1">
+                    <h2 class="font-bold text-slate-800">Aplicativo no celular</h2>
+                    <p class="text-sm text-slate-500" x-text="installed ? 'Instalado neste aparelho ✓' : 'Adicione o ícone na tela inicial.'">Adicione o ícone na tela inicial.</p>
+                </div>
+            </div>
+
+            <button type="button" x-show="!installed" @click="install()" class="btn-primary mt-4 w-full">
+                <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Instalar aplicativo
+            </button>
+
+            {{-- Passo a passo quando o navegador não instala sozinho (sempre no iPhone) --}}
+            <div x-show="help && !installed" x-cloak x-transition class="mt-4 rounded-xl bg-ice-50 p-4 text-sm text-slate-700">
+                <template x-if="platform === 'ios'">
+                    <ol class="list-decimal space-y-2 pl-5">
+                        <li>Abra este site no <b>Safari</b>.</li>
+                        <li>Toque em <b>Compartilhar</b>
+                            <svg class="inline size-5 align-text-bottom text-navy-600" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/></svg>
+                            na barra inferior.</li>
+                        <li>Role e toque em <b>Adicionar à Tela de Início</b>.</li>
+                        <li>Toque em <b>Adicionar</b>. O ícone do Cyberly Diet aparece na tela do iPhone.</li>
+                    </ol>
+                </template>
+                <template x-if="platform === 'android'">
+                    <ol class="list-decimal space-y-2 pl-5">
+                        <li>Abra este site no <b>Chrome</b>.</li>
+                        <li>Toque no menu <b>⋮</b> (canto superior direito).</li>
+                        <li>Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li>
+                        <li>Confirme em <b>Instalar</b>.</li>
+                    </ol>
+                </template>
+                <template x-if="platform === 'desktop'">
+                    <p>No Chrome ou Edge, clique no ícone de instalar <b>⊕</b> na barra de endereço, ou no menu <b>⋮</b> → <b>Instalar Cyberly Diet</b>.</p>
+                </template>
+            </div>
+        </div>
+
         <form method="POST" action="{{ route('goals.update') }}" class="card space-y-3">
             @csrf @method('PUT')
             <h2 class="text-lg font-bold text-slate-800">Metas</h2>

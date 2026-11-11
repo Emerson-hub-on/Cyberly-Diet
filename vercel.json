@@ -17,6 +17,17 @@
             "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
         },
         { "src": "/(favicon\\.ico|robots\\.txt)", "dest": "/$1" },
+        {
+            "src": "/sw\\.js",
+            "dest": "/sw.js",
+            "headers": { "Cache-Control": "no-cache", "Content-Type": "application/javascript; charset=utf-8" }
+        },
+        {
+            "src": "/manifest\\.webmanifest",
+            "dest": "/manifest.webmanifest",
+            "headers": { "Content-Type": "application/manifest+json; charset=utf-8" }
+        },
+        { "src": "/(offline\\.html|icons/.*)", "dest": "/$1" },
         { "src": "/(.*)", "dest": "/api/index.php" }
     ],
     "env": {

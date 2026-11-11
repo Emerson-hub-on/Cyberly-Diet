@@ -143,7 +143,7 @@ Alpine.data('mealForm', (defaultDate) => ({
             this.result = data.meal;
             this.redirect = data.redirect;
         } catch (e) {
-            this.error = e.message;
+            this.error = !navigator.onLine || e instanceof TypeError ? 'Sem conexão com internet.' : e.message;
         } finally {
             this.loading = false;
         }
@@ -306,6 +306,52 @@ function lineChart(id, labels, datasets) {
         options: { ...baseOptions, scales: { ...baseOptions.scales, y: { beginAtZero: false, grid: { color: '#e7eff7' } } } },
     });
 }
+
+// ---------- App instalável (PWA) ----------
+if ('serviceWorker' in navigator && window.isSecureContext) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
+// O Chrome (Android/PC) avisa que o app pode ser instalado; guardamos o aviso para o botão do perfil.
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    window.dispatchEvent(new CustomEvent('pwa-installable'));
+});
+
+const isStandalone = () =>
+    window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+Alpine.data('installApp', () => ({
+    installed: isStandalone(),
+    canPrompt: !!installPrompt,
+    help: false,
+    platform: /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+        ? 'ios'
+        : /android/i.test(navigator.userAgent) ? 'android' : 'desktop',
+
+    init() {
+        window.addEventListener('pwa-installable', () => (this.canPrompt = true));
+        window.addEventListener('appinstalled', () => {
+            this.installed = true;
+            this.canPrompt = false;
+            installPrompt = null;
+        });
+    },
+
+    async install() {
+        if (!installPrompt) {
+            this.help = true; // iPhone ou navegador sem instalação automática: mostra o passo a passo
+            return;
+        }
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        installPrompt = null;
+        this.canPrompt = false;
+        if (outcome === 'accepted') this.installed = true;
+    },
+}));
 
 window.Alpine = Alpine;
 Alpine.start();
