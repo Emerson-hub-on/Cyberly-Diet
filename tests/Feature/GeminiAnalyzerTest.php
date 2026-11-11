@@ -67,6 +67,57 @@ class GeminiAnalyzerTest extends TestCase
         $this->assertSame('modelo-b', $result['model']);
     }
 
+    public function test_timeout_on_one_model_tries_the_next(): void
+    {
+        Http::fake([
+            '*modelo-a:generateContent' => Http::failedConnection(),
+            '*modelo-b:generateContent' => Http::response($this->ok()),
+        ]);
+
+        $this->assertSame('modelo-b', app(MealAnalyzer::class)->analyze('bytes', 'image/jpeg', 'Almoço')['model']);
+    }
+
+    public function test_discontinued_model_is_skipped(): void
+    {
+        Http::fake([
+            '*modelo-a:generateContent' => Http::response(['error' => ['code' => 404, 'message' => 'no longer available']], 404),
+            '*modelo-b:generateContent' => Http::response($this->ok()),
+        ]);
+
+        $this->assertSame('modelo-b', app(MealAnalyzer::class)->analyze('bytes', 'image/jpeg', 'Almoço')['model']);
+    }
+
+    public function test_sends_low_thinking_and_bounded_output(): void
+    {
+        Http::fake(['*' => Http::response($this->ok())]);
+
+        app(MealAnalyzer::class)->analyze('bytes', 'image/jpeg', 'Almoço');
+
+        Http::assertSent(fn (Request $r) => $r['generationConfig']['thinkingConfig'] === ['thinkingLevel' => 'low']
+            && $r['generationConfig']['maxOutputTokens'] === 4096
+            && $r['generationConfig']['responseJsonSchema']['properties']['items']['maxItems'] === 15);
+    }
+
+    public function test_retries_without_thinking_when_model_rejects_it(): void
+    {
+        Http::fake(function (Request $request) {
+            return isset($request['generationConfig']['thinkingConfig'])
+                ? Http::response(['error' => ['code' => 400, 'message' => 'Thinking level is not supported for this model.']], 400)
+                : Http::response($this->ok());
+        });
+
+        $this->assertSame('modelo-a', app(MealAnalyzer::class)->analyze('bytes', 'image/jpeg', 'Almoço')['model']);
+    }
+
+    public function test_overloaded_message_when_every_attempt_times_out(): void
+    {
+        Http::fake(['*' => Http::failedConnection()]);
+
+        $this->expectExceptionMessage('sobrecarregada');
+
+        app(MealAnalyzer::class)->analyze('bytes', 'image/jpeg', 'Jantar');
+    }
+
     public function test_friendly_error_when_all_models_are_out_of_quota(): void
     {
         Http::fake(['*' => Http::response(['error' => ['code' => 429, 'message' => 'Quota exceeded']], 429)]);

@@ -27,8 +27,13 @@ return [
 
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
-        // Tentados em ordem: se um estiver sem cota gratuita, usa o próximo
-        'models' => array_values(array_filter(array_map('trim', explode(',', env('GEMINI_MODELS', 'gemini-3.8-flash,gemini-3.5-flash-lite,gemini-2.5-flash'))))),
+        // Tentados em rodízio: se um estiver sobrecarregado ou travar, usa o próximo
+        'models' => array_values(array_filter(array_map('trim', explode(',', env('GEMINI_MODELS', 'gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.8-flash'))))),
+        // Tempo máximo de cada tentativa e de todas juntas (a função da Vercel tem limite de 60 s)
+        'attempt_timeout' => (float) env('GEMINI_ATTEMPT_TIMEOUT', 20),
+        'budget_seconds' => (float) env('GEMINI_BUDGET_SECONDS', 50),
+        // Raciocínio reduzido = respostas bem mais rápidas (vazio para usar o padrão do modelo)
+        'thinking_level' => env('GEMINI_THINKING_LEVEL', 'low'),
     ],
 
     'anthropic' => [
