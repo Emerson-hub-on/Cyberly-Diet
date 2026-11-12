@@ -191,8 +191,8 @@ class DietFlowTest extends TestCase
 
         // Carrossel: Peso atual → Previsão → Progressão → Evolução → Variação; abaixo, formulário e histórico
         $this->get('/?data=2026-11-05&tab=peso')->assertSeeInOrder([
-            'x-ref="slides"', 'Peso atual', 'Previsão para atingir a meta', 'Progressão', 'Evolução do peso (kg)', 'Variação diária (kg)',
-            'Card 5 de 5', 'Registrar peso', 'Histórico de peso diário',
+            'x-ref="slides"', 'Peso atual', 'IMC', 'Previsão para atingir a meta', 'Progressão', 'Evolução do peso (kg)', 'Variação diária (kg)',
+            'Card 6 de 6', 'Registrar peso', 'Histórico de peso diário',
         ], false);
 
         // Dia sem refeições: déficit zerado (consumo desconhecido)
@@ -216,6 +216,21 @@ class DietFlowTest extends TestCase
             ->assertSee('Ontem')->assertSee('Prato de ontem')->assertSee('700 kcal')->assertDontSee('Prato de hoje');
 
         $this->get('/refeicoes?data=2020-01-01')->assertOk()->assertSee('Nenhuma refeição registrada neste dia.');
+    }
+
+        public function test_bmi_card_shows_class_table_and_distance_to_goal(): void
+    {
+        $user = User::factory()->create(['sex' => 'M', 'birth_date' => '1990-01-01', 'height_cm' => 180, 'weight_goal_kg' => 95]);
+        $user->weightLogs()->create(['weight_kg' => 125, 'measured_on' => now()->toDateString()]);
+
+        // 125 ÷ 1,8² = 38,6 → Obesidade grau II; meta 95 kg = IMC 29,3 (Sobrepeso)
+        $this->actingAs($user)->get('/?tab=peso')->assertOk()
+            ->assertSeeInOrder(['Peso atual', 'IMC', '38,6', 'Obesidade grau II', 'Classificação',
+                'Peso normal', '18,5 – 24,9', '59,9 – 80,9',
+                'Sobrepeso', '🎯 meta',
+                'Obesidade grau II', '← você', '113,4 – 129,5',
+                'Até a meta de 95,0 kg', 'IMC da meta: <b>29,3</b> (Sobrepeso)', 'Faltam <b>30,0 kg</b>', '−9,3 pontos de IMC',
+                'Próxima faixa (Obesidade grau I): faltam 11,7 kg', 'Previsão para atingir a meta'], false);
     }
 
         public function test_users_cannot_see_other_users_photos(): void

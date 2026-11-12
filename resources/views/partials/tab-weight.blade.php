@@ -15,8 +15,68 @@
 @endphp
 
 @php
+    // ---------- IMC (classificação da OMS) ----------
+    $bmiInfo = null;
+    $heightCm = auth()->user()->height_cm;
+    if ($p['current'] && $heightCm) {
+        $h2 = ($heightCm / 100) ** 2;
+        $classes = [ // [rótulo, IMC mínimo, IMC máximo, cor da linha, cor do ponto]
+            ['Abaixo do peso', 0, 18.5, 'bg-sky-100 text-sky-800', 'bg-sky-400'],
+            ['Peso normal', 18.5, 25, 'bg-emerald-100 text-emerald-800', 'bg-emerald-500'],
+            ['Sobrepeso', 25, 30, 'bg-amber-100 text-amber-800', 'bg-amber-400'],
+            ['Obesidade grau I', 30, 35, 'bg-orange-100 text-orange-800', 'bg-orange-500'],
+            ['Obesidade grau II', 35, 40, 'bg-rose-100 text-rose-800', 'bg-rose-500'],
+            ['Obesidade grau III', 40, INF, 'bg-red-100 text-red-800', 'bg-red-600'],
+        ];
+        $classOf = fn (float $bmi) => collect($classes)->search(fn ($c) => $bmi >= $c[1] && $bmi < $c[2]);
+        $value = round($p['current'] / $h2, 1);
+        $current = $classOf($value);
+        $goalBmi = $p['goal'] ? round($p['goal'] / $h2, 1) : null;
+        $goalClass = $goalBmi !== null ? $classOf($goalBmi) : null;
+
+        $table = collect($classes)->map(fn ($c, $i) => [
+            'label' => $c[0],
+            'bmi' => match (true) {
+                $c[1] == 0 => 'até '.$fmt($c[2] - 0.1),
+                is_infinite($c[2]) => $fmt($c[1]).' ou mais',
+                default => $fmt($c[1]).' – '.$fmt($c[2] - 0.1),
+            },
+            'kg' => match (true) {
+                $c[1] == 0 => 'até '.$fmt($c[2] * $h2 - 0.1),
+                is_infinite($c[2]) => $fmt($c[1] * $h2).' ou mais',
+                default => $fmt($c[1] * $h2).' – '.$fmt($c[2] * $h2 - 0.1),
+            },
+            'badge' => $c[3],
+            'dot' => $c[4],
+            'current' => $i === $current,
+            'goal' => $i === $goalClass,
+        ])->all();
+
+        // Próxima faixa no caminho até a meta (só se ainda houver faixas entre a atual e a da meta)
+        $next = null;
+        if ($goalClass !== null && abs($goalClass - $current) > 1) {
+            $step = $goalClass < $current ? -1 : 1;
+            $boundary = $step < 0 ? $classes[$current][1] * $h2 - 0.1 : $classes[$current][2] * $h2;
+            $next = ['label' => $classes[$current + $step][0], 'kg' => abs($p['current'] - $boundary)];
+        }
+
+        $bmiInfo = [
+            'value' => $value,
+            'height_m' => $heightCm / 100,
+            'category' => ['label' => $classes[$current][0], 'badge' => $classes[$current][3]],
+            'table' => $table,
+            'goal' => $goalBmi !== null ? [
+                'value' => $goalBmi,
+                'category' => $classes[$goalClass][0],
+                'kg' => round($p['goal'] - $p['current'], 1),
+                'points' => round($goalBmi - $value, 1),
+            ] : null,
+            'next' => $next,
+        ];
+    }
+
     $showForecast = isset($p['planned']) && ! $p['reached'];
-    $slideCount = 1 + ($showForecast ? 1 : 0) + (isset($p['weeks']) ? 1 : 0) + ($weights->isNotEmpty() ? 2 : 0);
+    $slideCount = 1 + ($bmiInfo ? 1 : 0) + ($showForecast ? 1 : 0) + (isset($p['weeks']) ? 1 : 0) + ($weights->isNotEmpty() ? 2 : 0);
 @endphp
 
 <section x-show="tab === 'peso'" x-cloak class="space-y-4">
@@ -85,6 +145,62 @@
         </a>
     @endif
     </div>
+
+    {{-- IMC: atual, faixa em que a pessoa está e quanto falta para a meta --}}
+    @if ($bmiInfo)
+        <div class="card w-full shrink-0 snap-start">
+            <h2 class="text-lg font-bold text-slate-800">IMC</h2>
+            <div class="mt-2 flex items-end justify-between gap-3">
+                <div>
+                    <p class="text-4xl font-light text-slate-800">{{ $fmt($bmiInfo['value']) }}</p>
+                    <p class="text-xs text-slate-500">{{ $fmt($p['current']) }} kg ÷ ({{ $fmt($bmiInfo['height_m'], 2) }} m)²</p>
+                </div>
+                <span class="rounded-full px-3 py-1 text-sm font-semibold {{ $bmiInfo['category']['badge'] }}">{{ $bmiInfo['category']['label'] }}</span>
+            </div>
+
+            <table class="mt-4 w-full text-left text-xs">
+                <thead class="text-slate-400">
+                    <tr>
+                        <th class="pb-1.5 font-medium">Classificação</th>
+                        <th class="pb-1.5 text-right font-medium">IMC</th>
+                        <th class="pb-1.5 text-right font-medium">Peso p/ {{ $fmt($bmiInfo['height_m'], 2) }} m</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($bmiInfo['table'] as $row)
+                        <tr @class(['font-semibold text-slate-800 '.$row['badge'] => $row['current'], 'text-slate-600' => ! $row['current']])>
+                            <td class="rounded-l-lg py-1.5 pl-2">
+                                <span class="mr-1 inline-block size-2 rounded-full {{ $row['dot'] }}"></span>{{ $row['label'] }}
+                                @if ($row['current']) <span class="text-[10px] font-normal">← você</span> @endif
+                                @if ($row['goal'] && ! $row['current']) <span class="text-[10px]">🎯 meta</span> @endif
+                            </td>
+                            <td class="py-1.5 text-right">{{ $row['bmi'] }}</td>
+                            <td class="rounded-r-lg py-1.5 pr-2 text-right">{{ $row['kg'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            @if ($bmiInfo['goal'])
+                <div class="mt-4 rounded-xl bg-navy-50 p-3 text-sm text-slate-700">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-navy-600">Até a meta de {{ $fmt($p['goal']) }} kg</p>
+                    @if (abs($bmiInfo['goal']['kg']) < 0.1)
+                        <p class="mt-1">🎉 Você já está no IMC da meta ({{ $fmt($bmiInfo['goal']['value']) }}).</p>
+                    @else
+                        <p class="mt-1">
+                            IMC da meta: <b>{{ $fmt($bmiInfo['goal']['value']) }}</b> ({{ $bmiInfo['goal']['category'] }}).
+                            Faltam <b>{{ $fmt(abs($bmiInfo['goal']['kg'])) }} kg</b>
+                            ({{ $bmiInfo['goal']['kg'] < 0 ? '−' : '+' }}{{ $fmt(abs($bmiInfo['goal']['points'])) }} pontos de IMC).
+                        </p>
+                        @if ($bmiInfo['next'])
+                            <p class="mt-1 text-xs text-slate-500">Próxima faixa ({{ $bmiInfo['next']['label'] }}): faltam {{ $fmt($bmiInfo['next']['kg']) }} kg.</p>
+                        @endif
+                    @endif
+                </div>
+            @endif
+            <p class="mt-3 text-[11px] text-slate-400">IMC = peso ÷ altura². Classificação da OMS para adultos; não considera massa muscular.</p>
+        </div>
+    @endif
 
     {{-- Previsão até a meta --}}
     @if ($showForecast)
