@@ -70,7 +70,10 @@ class NutritionGoalsTest extends TestCase
         $user = $this->person(['calorie_goal' => 1700]);
 
         $this->actingAs($user)->get('/?tab=metas')->assertOk()
-            ->assertSeeInOrder(['Caloria basal (TMB)', 'Peso meta', 'Água/dia', 'Calorias/dia', 'Proteína', 'Carboidrato', 'Gorduras', 'Fibras', 'Salvar metas']);
+            ->assertSeeInOrder(['Caloria basal (TMB)', 'Peso meta', 'Água/dia', 'Calorias/dia', 'Proteína', 'Carboidrato', 'Gorduras', 'Fibras', 'Salvar metas'])
+            ->assertSee('aria-label="O que é Caloria basal (TMB)?"', false)
+            ->assertSee('Como o sistema calcula')
+            ->assertSee('Mifflin-St Jeor');
 
         // Usuário define TMB e fibras; calorias voltam para o automático
         $this->put('/metas', [
