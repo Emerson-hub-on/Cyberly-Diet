@@ -121,6 +121,8 @@ class DietFlowTest extends TestCase
         $response->assertJsonPath('meal.items.0.name', 'Arroz');
 
         // Tabela por alimento: Nome | Kcal | Carb | Prot | Gord. | Fibra | Açúcar
+        // Nutrientes do dia: 2ª página com açúcar (limite 10% de 2000 kcal = 50 g) e fibras (25 g)
+        $this->get('/')->assertOk()->assertSeeInOrder(['Proteínas', 'Carbos', 'Gorduras', '3g', 'de 50g', 'Açúcar', '8g', 'de 25g', 'Fibras']);
         $this->get('/')->assertOk()->assertSee('Arroz, feijão e frango')->assertSee('600 Kcal')
             ->assertSeeInOrder(['Nome', 'Kcal', 'Carb', 'Prot', 'Gord.', 'Fibra', 'Açúcar', 'Arroz', '150 g', '200', '44', '4', '0,5', '2,3', '0']);
         $this->get('/refeicoes')->assertSeeInOrder(['Fibra', 'Arroz', '150 g', '200', '44']);

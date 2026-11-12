@@ -70,8 +70,29 @@
             </div>
 
             <div class="card">
-                <h2 class="mb-4 text-lg font-bold text-slate-800">Nutrientes do dia</h2>
-                <div class="flex justify-between">
+                @php
+                    $grams = fn ($v) => rtrim(rtrim(number_format($v, 1, ',', ''), '0'), ',');
+                    $fiberGoal = config('diet.fiber_goal_g');
+                    $sugarLimit = round($goal * config('diet.sugar_limit_pct') / 100 / 4); // 1 g de açúcar = 4 kcal
+                    $fiberPct = $fiberGoal > 0 ? (int) round($totals['fiber_g'] / $fiberGoal * 100) : 0;
+                    $sugarPct = $sugarLimit > 0 ? (int) round($totals['sugar_g'] / $sugarLimit * 100) : 0;
+                @endphp
+                <div x-data="{ page: 0 }">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-slate-800">Nutrientes do dia</h2>
+                    <div class="flex gap-1">
+                        @foreach (['Macronutrientes', 'Açúcar e fibras'] as $i => $pageLabel)
+                            <button type="button" aria-label="{{ $pageLabel }}" class="p-1"
+                                    @click="$refs.slides.scrollTo({ left: {{ $i }} * $refs.slides.clientWidth, behavior: 'smooth' })">
+                                <span class="block size-2 rounded-full transition-colors" :class="page === {{ $i }} ? 'bg-navy-600' : 'bg-ice-200'"></span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+                {{-- Deslize para o lado: macronutrientes ↔ açúcar e fibras --}}
+                <div x-ref="slides" @scroll.debounce.50ms="page = Math.round($el.scrollLeft / $el.clientWidth)"
+                     class="no-scrollbar -mx-1 flex snap-x snap-mandatory overflow-x-auto">
+                <div class="flex w-full shrink-0 snap-start justify-between px-1">
                     <x-ring :pct="$split['protein_pct']" color="#3b82f6" label="Proteínas">
                         <span class="font-bold text-slate-800">{{ rtrim(rtrim(number_format($totals['protein_g'], 1, ',', ''), '0'), ',') }}g</span>
                         <span class="text-[11px] text-slate-400">{{ $split['protein_pct'] }}%</span>
@@ -85,17 +106,23 @@
                         <span class="text-[11px] text-slate-400">{{ $split['fat_pct'] }}%</span>
                     </x-ring>
                 </div>
-                <div class="mt-5 grid grid-cols-2 gap-3 text-sm">
-                    <div class="rounded-xl bg-ice-50 px-3 py-2">
-                        <span class="text-slate-500">Açúcar</span>
-                        <p class="font-semibold text-slate-800">{{ number_format($totals['sugar_g'], 1, ',', '.') }} g</p>
-                    </div>
-                    <div class="rounded-xl bg-ice-50 px-3 py-2">
-                        <span class="text-slate-500">Fibras</span>
-                        <p class="font-semibold text-slate-800">{{ number_format($totals['fiber_g'], 1, ',', '.') }} g</p>
-                    </div>
+                <div class="flex w-full shrink-0 snap-start justify-around px-1">
+                    <x-ring :pct="$sugarPct" :color="$sugarPct > 100 ? '#f43f5e' : '#94a3b8'" label="Açúcar">
+                        <span class="font-bold text-slate-800">{{ $grams($totals['sugar_g']) }}g</span>
+                        <span class="text-[11px] {{ $sugarPct > 100 ? 'text-rose-500' : 'text-slate-400' }}">de {{ $sugarLimit }}g</span>
+                    </x-ring>
+                    <x-ring :pct="$fiberPct" color="#10b981" label="Fibras">
+                        <span class="font-bold text-slate-800">{{ $grams($totals['fiber_g']) }}g</span>
+                        <span class="text-[11px] {{ $fiberPct >= 100 ? 'text-emerald-600' : 'text-slate-400' }}">de {{ $fiberGoal }}g</span>
+                    </x-ring>
                 </div>
-                <p class="mt-3 text-xs text-slate-400">Percentuais = participação de cada macronutriente nas calorias do dia.</p>
+                </div>
+                <p x-show="page === 0" class="mt-3 text-xs text-slate-400">Percentuais = participação de cada macronutriente nas calorias do dia. Deslize para ver açúcar e fibras →</p>
+                <p x-show="page === 1" x-cloak class="mt-3 text-xs text-slate-400">
+                    Açúcar: limite de {{ config('diet.sugar_limit_pct') }}% da meta de calorias ({{ $sugarLimit }} g){{ $sugarPct > 100 ? ' · ultrapassou em ' . $grams($totals['sugar_g'] - $sugarLimit) . ' g' : '' }}.
+                    Fibras: recomendado ao menos {{ $fiberGoal }} g por dia.
+                </p>
+                </div>
             </div>
 
             <div class="card">

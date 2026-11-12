@@ -79,6 +79,10 @@ return [
     // ≈ 7.700 kcal de déficit para perder 1 kg de gordura corporal
     'kcal_per_kg' => 7700,
 
+    // Referências diárias para os anéis de "Nutrientes do dia"
+    'fiber_goal_g' => 25,     // ingestão mínima recomendada de fibras (OMS / ANVISA)
+    'sugar_limit_pct' => 10,  // açúcar até 10% das calorias da meta (OMS): 2.000 kcal → 50 g
+
     'defaults' => [
         'calorie_goal' => 2000,
         'water_goal_ml' => 2000,
