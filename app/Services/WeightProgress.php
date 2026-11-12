@@ -156,12 +156,13 @@ class WeightProgress
 
         $base = self::baseExpenditure($current->weight_kg, $height, $age, $sex);
 
-        // Déficit do dia selecionado: gasto basal + atividades do dia − refeições do dia
+        // Déficit do dia selecionado: gasto basal + atividades do dia − refeições do dia.
+        // Sem refeições registradas o consumo é desconhecido, então o déficit fica zerado.
         $today = $daily->last();
         $day = [
             'intake' => $today['intake'],
             'activity' => $today['activity'],
-            'deficit' => (int) round($base + $today['activity'] - $today['intake']),
+            'deficit' => $today['logged'] ? (int) round($base + $today['activity'] - $today['intake']) : 0,
         ];
 
         $plannedDeficit = round($base + $avgActivity - $intakeGoal);

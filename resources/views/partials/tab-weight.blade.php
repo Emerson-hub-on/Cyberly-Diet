@@ -87,11 +87,11 @@
                 <div class="flex justify-between"><dt class="text-slate-500">− Calorias consumidas</dt><dd class="font-medium text-slate-700">{{ $fmt($p['day']['intake'], 0) }} kcal</dd></div>
                 <div class="flex justify-between border-t border-ice-100 pt-1.5">
                     <dt class="font-semibold text-slate-700">{{ $p['day']['deficit'] >= 0 ? 'Déficit' : 'Superávit' }} do dia</dt>
-                    <dd class="font-bold {{ ($p['day']['deficit'] > 0) === $losing ? 'text-emerald-600' : 'text-rose-600' }}">{{ $fmt(abs($p['day']['deficit']), 0) }} kcal</dd>
+                    <dd class="font-bold {{ $p['day']['deficit'] === 0 ? 'text-slate-500' : (($p['day']['deficit'] > 0) === $losing ? 'text-emerald-600' : 'text-rose-600') }}">{{ $fmt(abs($p['day']['deficit']), 0) }} kcal</dd>
                 </div>
             </dl>
             @if (! $p['day']['intake'])
-                <p class="mt-1.5 text-xs text-amber-700">Nenhuma refeição registrada neste dia. O déficit fica completo depois que você registrar o que comeu.</p>
+                <p class="mt-1.5 text-xs text-amber-700">Nenhuma refeição registrada neste dia. O déficit é calculado assim que você registrar o que comeu.</p>
             @endif
 
             <div class="mt-4 rounded-xl bg-navy-50 p-4">
