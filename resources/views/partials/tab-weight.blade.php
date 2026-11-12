@@ -210,7 +210,8 @@
             {{-- Déficit real do dia selecionado --}}
             <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Balanço de {{ $date->isToday() ? 'hoje' : $date->format('d/m/Y') }}</p>
             <dl class="mt-1.5 space-y-1.5 text-sm">
-                <div class="flex justify-between"><dt class="text-slate-500">Gasto basal (sem exercício)</dt><dd class="font-medium text-slate-700">{{ $fmt($p['base_expenditure'], 0) }} kcal</dd></div>
+                <div class="flex justify-between"><dt class="text-slate-500">Caloria basal (TMB{{ $p['bmr_custom'] ? ', de Metas' : '' }})</dt><dd class="font-medium text-slate-700">{{ $fmt($p['bmr'], 0) }} kcal</dd></div>
+                <div class="flex justify-between"><dt class="text-slate-500">+ Gasto da rotina (20% da TMB)</dt><dd class="font-medium text-slate-700">{{ $fmt($p['base_expenditure'] - $p['bmr'], 0) }} kcal</dd></div>
                 <div class="flex justify-between"><dt class="text-slate-500">+ Gasto em atividades</dt><dd class="font-medium text-slate-700">{{ $fmt($p['day']['activity'], 0) }} kcal</dd></div>
                 <div class="flex justify-between"><dt class="text-slate-500">− Calorias consumidas</dt><dd class="font-medium text-slate-700">{{ $fmt($p['day']['intake'], 0) }} kcal</dd></div>
                 <div class="flex justify-between border-t border-ice-100 pt-1.5">
