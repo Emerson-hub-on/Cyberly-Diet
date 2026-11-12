@@ -233,7 +233,11 @@
         {{-- ==================== ÁGUA ==================== --}}
         <section x-show="tab === 'agua'" x-cloak class="space-y-4">
             @php($waterPct = $waterGoal > 0 ? round($waterTotal / $waterGoal * 100) : 0)
-            <div class="card flex flex-col items-center">
+            {{-- Carrossel: Ingestão de água → Histórico de água --}}
+            <div x-data="carousel">
+            <div x-ref="slides" @scroll.debounce.50ms="onScroll()"
+                 class="no-scrollbar -my-2 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overflow-y-hidden py-2 transition-[height] duration-300">
+            <div class="card w-full shrink-0 snap-start flex flex-col items-center">
                 <h2 class="self-start text-lg font-bold text-slate-800">Ingestão de água</h2>
                 <div class="my-3">
                     <x-ring :pct="$waterPct" color="#0ea5e9" :size="150" :stroke="13">
@@ -259,11 +263,18 @@
                 </form>
             </div>
 
-            <div class="card">
+            <div class="card w-full shrink-0 snap-start">
                 <h2 class="mb-3 text-lg font-bold text-slate-800">Histórico de água (ml)</h2>
                 <div class="h-56"><canvas id="chart-water"></canvas></div>
-                @if ($waterLogs->isNotEmpty())
-                    <ul class="mt-4 divide-y divide-ice-100 text-sm">
+            </div>
+            </div>
+            <x-carousel-dots :labels="['Ingestão de água', 'Histórico de água']" hint="Deslize para o lado para ver o histórico de água →" />
+            </div>
+
+            @if ($waterLogs->isNotEmpty())
+                <div class="card">
+                    <h2 class="mb-1 text-lg font-bold text-slate-800">Registros do dia</h2>
+                    <ul class="divide-y divide-ice-100 text-sm">
                         @foreach ($waterLogs->reverse() as $w)
                             <li class="flex items-center justify-between py-2">
                                 <span class="text-slate-500">{{ $w->logged_at->format('H:i') }}</span>
@@ -273,8 +284,8 @@
                             </li>
                         @endforeach
                     </ul>
-                @endif
-            </div>
+                </div>
+            @endif
         </section>
     </div>
 </x-layouts.app>

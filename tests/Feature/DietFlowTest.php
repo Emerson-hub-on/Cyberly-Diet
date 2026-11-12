@@ -166,7 +166,8 @@ class DietFlowTest extends TestCase
             $this->get("/?tab={$tab}")->assertOk();
         }
         $this->get('/?tab=peso')->assertSee('82,4 kg')->assertSee('IMC 26,0');
-        $this->get('/?tab=agua')->assertSee('0,50 L');
+        $this->get('/?tab=agua')->assertSee('0,50 L')
+            ->assertSeeInOrder(['Ingestão de água', 'Histórico de água (ml)', 'Deslize para o lado para ver o histórico de água', 'Registros do dia', '500 ml']);
         $this->assertSame(1800, $user->fresh()->calorie_goal);
         $this->assertDatabaseCount('events', 4);
     }
