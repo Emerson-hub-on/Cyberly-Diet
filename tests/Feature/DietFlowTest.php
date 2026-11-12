@@ -165,6 +165,21 @@ class DietFlowTest extends TestCase
         $this->assertDatabaseCount('events', 4);
     }
 
+    public function test_weight_projection_shows_real_deficit_of_the_day(): void
+    {
+        // Homem, 30 anos, 180 cm, 90 kg → TMB = 900 + 1125 − 150 + 5 = 1880; × 1,2 = 2256 kcal
+        $user = User::factory()->create([
+            'sex' => 'M', 'birth_date' => '1996-01-01', 'height_cm' => 180, 'weight_goal_kg' => 80,
+        ]);
+        $user->weightLogs()->create(['weight_kg' => 90, 'measured_on' => '2026-11-01']);
+        $user->meals()->create(['meal_type' => 'almoco', 'eaten_at' => '2026-11-05 12:00', 'calories' => 1500]);
+        $user->activityLogs()->create(['activity' => 'Corrida', 'duration_min' => 30, 'calories_burned' => 400, 'performed_on' => '2026-11-05']);
+
+        // 2256 + 400 − 1500 = 1156 kcal de déficit
+        $this->actingAs($user)->get('/?data=2026-11-05&tab=peso')->assertOk()
+            ->assertSeeInOrder(['Balanço de 05/11/2026', '2.256 kcal', '+ Gasto em atividades', '400 kcal', '− Calorias consumidas', '1.500 kcal', 'Déficit do dia', '1.156 kcal']);
+    }
+
     public function test_users_cannot_see_other_users_photos(): void
     {
         $owner = User::factory()->create();

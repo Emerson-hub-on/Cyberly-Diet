@@ -155,6 +155,15 @@ class WeightProgress
         $loggedDays = $last7->where('logged', true);
 
         $base = self::baseExpenditure($current->weight_kg, $height, $age, $sex);
+
+        // Déficit do dia selecionado: gasto basal + atividades do dia − refeições do dia
+        $today = $daily->last();
+        $day = [
+            'intake' => $today['intake'],
+            'activity' => $today['activity'],
+            'deficit' => (int) round($base + $today['activity'] - $today['intake']),
+        ];
+
         $plannedDeficit = round($base + $avgActivity - $intakeGoal);
         $planned = self::project($current->weight_kg, $goal, $intakeGoal, $avgActivity, $height, $age, $sex);
 
@@ -181,6 +190,7 @@ class WeightProgress
             'intake_goal' => $intakeGoal,
             'avg_activity' => (int) $avgActivity,
             'planned_deficit' => (int) $plannedDeficit,
+            'day' => $day,
             'planned' => $planned + ['date' => $planned['days'] ? $date->addDays($planned['days']) : null],
             'real' => $real ? $real + ['date' => $real['days'] ? $date->addDays($real['days']) : null] : null,
             'expected_change_kg' => round($expectedChange, 1),

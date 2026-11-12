@@ -79,19 +79,25 @@
         <div class="card">
             <h2 class="text-lg font-bold text-slate-800">Previsão para atingir a meta</h2>
 
-            <dl class="mt-3 space-y-1.5 text-sm">
-                <div class="flex justify-between"><dt class="text-slate-500">Gasto basal (sem exercício)</dt><dd class="font-medium text-slate-700">{{ $fmt($p['base_expenditure'], 0) }} kcal/dia</dd></div>
-                <div class="flex justify-between"><dt class="text-slate-500">+ Atividades (média 7 dias)</dt><dd class="font-medium text-slate-700">{{ $fmt($p['avg_activity'], 0) }} kcal/dia</dd></div>
-                <div class="flex justify-between"><dt class="text-slate-500">− Meta de consumo</dt><dd class="font-medium text-slate-700">{{ $fmt($p['intake_goal'], 0) }} kcal/dia</dd></div>
+            {{-- Déficit real do dia selecionado --}}
+            <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Balanço de {{ $date->isToday() ? 'hoje' : $date->format('d/m/Y') }}</p>
+            <dl class="mt-1.5 space-y-1.5 text-sm">
+                <div class="flex justify-between"><dt class="text-slate-500">Gasto basal (sem exercício)</dt><dd class="font-medium text-slate-700">{{ $fmt($p['base_expenditure'], 0) }} kcal</dd></div>
+                <div class="flex justify-between"><dt class="text-slate-500">+ Gasto em atividades</dt><dd class="font-medium text-slate-700">{{ $fmt($p['day']['activity'], 0) }} kcal</dd></div>
+                <div class="flex justify-between"><dt class="text-slate-500">− Calorias consumidas</dt><dd class="font-medium text-slate-700">{{ $fmt($p['day']['intake'], 0) }} kcal</dd></div>
                 <div class="flex justify-between border-t border-ice-100 pt-1.5">
-                    <dt class="font-semibold text-slate-700">{{ $p['planned_deficit'] >= 0 ? 'Déficit' : 'Superávit' }} planejado</dt>
-                    <dd class="font-bold {{ ($p['planned_deficit'] > 0) === $losing ? 'text-emerald-600' : 'text-rose-600' }}">{{ $fmt(abs($p['planned_deficit']), 0) }} kcal/dia</dd>
+                    <dt class="font-semibold text-slate-700">{{ $p['day']['deficit'] >= 0 ? 'Déficit' : 'Superávit' }} do dia</dt>
+                    <dd class="font-bold {{ ($p['day']['deficit'] > 0) === $losing ? 'text-emerald-600' : 'text-rose-600' }}">{{ $fmt(abs($p['day']['deficit']), 0) }} kcal</dd>
                 </div>
             </dl>
+            @if (! $p['day']['intake'])
+                <p class="mt-1.5 text-xs text-amber-700">Nenhuma refeição registrada neste dia. O déficit fica completo depois que você registrar o que comeu.</p>
+            @endif
 
             <div class="mt-4 rounded-xl bg-navy-50 p-4">
                 @if ($p['planned']['days'])
                     <p class="text-xs font-semibold uppercase tracking-wide text-navy-600">Mantendo a meta de {{ $fmt($p['intake_goal'], 0) }} kcal/dia</p>
+                    <p class="mt-0.5 text-xs text-slate-500">{{ $p['planned_deficit'] >= 0 ? 'Déficit' : 'Superávit' }} planejado de {{ $fmt(abs($p['planned_deficit']), 0) }} kcal/dia (atividades na média de 7 dias: {{ $fmt($p['avg_activity'], 0) }} kcal)</p>
                     <p class="mt-1 text-2xl font-light text-navy-800">≈ {{ $humanDays($p['planned']['days']) }}</p>
                     <p class="text-sm text-slate-600">Previsão: <b>{{ $p['planned']['date']->translatedFormat('F \d\e Y') }}</b> ({{ $p['planned']['date']->format('d/m/Y') }})</p>
                     <p class="mt-1 text-xs text-slate-500">≈ {{ $fmt(abs($p['planned_deficit']) * 7 / config('diet.kcal_per_kg'), 2) }} kg por semana no ritmo atual</p>
