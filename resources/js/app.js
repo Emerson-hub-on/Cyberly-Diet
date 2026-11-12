@@ -307,6 +307,39 @@ function lineChart(id, labels, datasets) {
     });
 }
 
+/* ------------------------------------------------------------------ */
+/* Carrossel de cards (deslizar para o lado). A altura acompanha o     */
+/* card visível, sem espaço vazio quando um card é mais baixo.         */
+/* Uso: x-data="carousel" com x-ref="slides" no contêiner rolável.    */
+/* ------------------------------------------------------------------ */
+const SLIDE_GAP = 12; // gap-3
+
+Alpine.data('carousel', () => ({
+    page: 0,
+
+    init() {
+        this.$watch('page', () => this.fit());
+        // Recalcula quando a aba aparece, um gráfico termina de desenhar ou a tela muda de tamanho
+        const ro = new ResizeObserver(() => this.fit());
+        [...this.$refs.slides.children].forEach((slide) => ro.observe(slide));
+    },
+
+    onScroll() {
+        const el = this.$refs.slides;
+        this.page = Math.round(el.scrollLeft / (el.clientWidth + SLIDE_GAP));
+    },
+
+    go(i) {
+        const el = this.$refs.slides;
+        el.scrollTo({ left: i * (el.clientWidth + SLIDE_GAP), behavior: 'smooth' });
+    },
+
+    fit() {
+        const slide = this.$refs.slides.children[this.page];
+        if (slide && slide.offsetHeight) this.$refs.slides.style.height = `${slide.offsetHeight + 16}px`; // + py-2
+    },
+}));
+
 // ---------- App instalável (PWA) ----------
 if ('serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));

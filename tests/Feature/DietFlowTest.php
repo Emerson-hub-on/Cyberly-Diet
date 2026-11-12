@@ -60,6 +60,9 @@ class DietFlowTest extends TestCase
             ->assertSee('value="2026-11-05"', false)
             ->assertSee('window.location = link($event.target.value)', false)
             ->assertSee('05/11/2026');
+
+        // Consumo calórico: Calorias consumidas e Histórico de calorias no mesmo carrossel, Nutrientes abaixo
+        $this->get('/')->assertSeeInOrder(['x-data="carousel"', 'Calorias consumidas', 'Histórico de calorias (Kcal)', 'Deslize para o lado', 'Nutrientes do dia'], false);
     }
 
     public function test_app_is_installable_from_profile(): void
