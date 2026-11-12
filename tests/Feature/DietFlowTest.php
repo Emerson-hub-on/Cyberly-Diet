@@ -93,7 +93,7 @@ class DietFlowTest extends TestCase
         $this->mock(MealAnalyzer::class)->shouldReceive('analyze')->once()->andReturn([
             'is_food' => true,
             'title' => 'Arroz, feijão e frango',
-            'items' => [['name' => 'Arroz', 'portion' => '150 g', 'calories' => 200, 'protein_g' => 4, 'carbs_g' => 44, 'sugar_g' => 0, 'fat_g' => 0.5]],
+            'items' => [['name' => 'Arroz', 'portion' => '150 g', 'calories' => 200, 'protein_g' => 4, 'carbs_g' => 44, 'sugar_g' => 0, 'fat_g' => 0.5, 'fiber_g' => 2.3]],
             'totals' => ['calories' => 600, 'protein_g' => 40, 'carbs_g' => 70, 'sugar_g' => 3, 'fat_g' => 15, 'fiber_g' => 8],
             'confidence' => 'media',
             'notes' => 'Prato equilibrado.',
@@ -120,10 +120,10 @@ class DietFlowTest extends TestCase
 
         $response->assertJsonPath('meal.items.0.name', 'Arroz');
 
-        // Detalhamento por alimento: "Arroz (150 g)  200 Kcal · 44 g Carb. · 4 g Prot. · 0,5 g Gordura · 0 g Açúcar"
+        // Tabela por alimento: Nome | Kcal | Carb | Prot | Gord. | Fibra | Açúcar
         $this->get('/')->assertOk()->assertSee('Arroz, feijão e frango')->assertSee('600 Kcal')
-            ->assertSeeInOrder(['Arroz', '(150 g)', '200 Kcal', '44 g', 'Carb.', '4 g', 'Prot.', '0,5 g', 'Gordura', '0 g', 'Açúcar']);
-        $this->get('/refeicoes')->assertSeeInOrder(['Arroz', '(150 g)', '200 Kcal', '44 g', 'Carb.']);
+            ->assertSeeInOrder(['Nome', 'Kcal', 'Carb', 'Prot', 'Gord.', 'Fibra', 'Açúcar', 'Arroz', '150 g', '200', '44', '4', '0,5', '2,3', '0']);
+        $this->get('/refeicoes')->assertSeeInOrder(['Fibra', 'Arroz', '150 g', '200', '44']);
         $this->get("/refeicoes/{$meal->id}/foto")->assertOk();
         $this->get('/refeicoes')->assertOk()->assertSee('Arroz, feijão e frango');
         $this->get('/perfil')->assertOk()->assertSee('Refeição registrada');

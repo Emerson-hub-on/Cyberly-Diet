@@ -97,20 +97,41 @@
                     <div class="rounded-xl bg-indigo-50 p-2"><p class="text-base font-bold text-fat" x-text="result.fat_g + 'g'"></p>Gorduras<p class="text-slate-400" x-text="result.fat_pct + '%'"></p></div>
                     <div class="rounded-xl bg-slate-50 p-2"><p class="text-base font-bold text-slate-500" x-text="result.sugar_g + 'g'"></p>Açúcar</div>
                 </div>
-                <ul x-show="result.items && result.items.length" class="divide-y divide-ice-100 rounded-xl bg-ice-50 px-3">
-                    <template x-for="item in result.items">
-                        <li class="py-2">
-                            <p class="text-sm font-medium text-slate-800"><span x-text="item.name"></span> <span class="font-normal text-slate-400" x-text="'(' + item.portion + ')'"></span></p>
-                            <p class="mt-0.5 text-xs text-slate-500">
-                                <b class="text-slate-700" x-text="Math.round(item.calories) + ' Kcal'"></b>
-                                · <b class="text-carbs" x-text="fmt(item.carbs_g) + ' g'"></b> Carb.
-                                · <b class="text-protein" x-text="fmt(item.protein_g) + ' g'"></b> Prot.
-                                · <b class="text-fat" x-text="fmt(item.fat_g) + ' g'"></b> Gordura
-                                · <b class="text-slate-600" x-text="fmt(item.sugar_g) + ' g'"></b> Açúcar
-                            </p>
-                        </li>
-                    </template>
-                </ul>
+                <div x-show="result.items && result.items.length">
+                    <h4 class="mb-2 text-sm font-bold text-slate-700">Alimentos identificados</h4>
+                    <div class="overflow-x-auto rounded-xl bg-ice-50 px-2">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                                    <th class="py-2 pr-1 font-semibold">Nome</th>
+                                    <th class="px-1 py-2 text-right font-semibold">Kcal</th>
+                                    <th class="px-1 py-2 text-right font-semibold text-carbs">Carb</th>
+                                    <th class="px-1 py-2 text-right font-semibold text-protein">Prot</th>
+                                    <th class="px-1 py-2 text-right font-semibold text-fat">Gord.</th>
+                                    <th class="px-1 py-2 text-right font-semibold text-emerald-600">Fibra</th>
+                                    <th class="py-2 pl-1 text-right font-semibold">Açúcar</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-ice-100 border-t border-ice-200">
+                                <template x-for="item in result.items">
+                                    <tr class="align-top">
+                                        <td class="py-2 pr-1">
+                                            <span class="font-medium text-slate-800" x-text="item.name"></span>
+                                            <span class="block text-[11px] text-slate-400" x-text="item.portion"></span>
+                                        </td>
+                                        <td class="whitespace-nowrap px-1 py-2 text-right font-semibold text-slate-700" x-text="Math.round(item.calories)"></td>
+                                        <td class="whitespace-nowrap px-1 py-2 text-right text-slate-600" x-text="fmt(item.carbs_g)"></td>
+                                        <td class="whitespace-nowrap px-1 py-2 text-right text-slate-600" x-text="fmt(item.protein_g)"></td>
+                                        <td class="whitespace-nowrap px-1 py-2 text-right text-slate-600" x-text="fmt(item.fat_g)"></td>
+                                        <td class="whitespace-nowrap px-1 py-2 text-right text-slate-600" x-text="item.fiber_g == null ? '—' : fmt(item.fiber_g)"></td>
+                                        <td class="whitespace-nowrap py-2 pl-1 text-right text-slate-600" x-text="fmt(item.sugar_g)"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <p class="pb-2 text-right text-[10px] text-slate-400">Nutrientes em gramas</p>
+                    </div>
+                </div>
                 <p class="text-xs text-slate-400">Estimativa feita por IA a partir da foto (confiança: <span x-text="result.confidence"></span>). Os valores são aproximados.</p>
                 <button type="button" class="btn-primary w-full py-3" @click="finish">Ver no painel</button>
             </div>

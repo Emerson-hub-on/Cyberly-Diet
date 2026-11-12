@@ -8,7 +8,7 @@ namespace App\Services;
  *
  * @phpstan-type Analysis array{
  *     is_food: bool, title: string, confidence: string, notes: string, model: string,
- *     items: list<array{name: string, portion: string, calories: float, protein_g: float, carbs_g: float, sugar_g: float, fat_g: float}>,
+ *     items: list<array{name: string, portion: string, calories: float, protein_g: float, carbs_g: float, sugar_g: float, fat_g: float, fiber_g: float}>,
  *     totals: array{calories: float, protein_g: float, carbs_g: float, sugar_g: float, fat_g: float, fiber_g: float}
  * }
  */
@@ -82,8 +82,9 @@ abstract class MealAnalyzer
                             'carbs_g' => $num,
                             'sugar_g' => $num,
                             'fat_g' => $num,
+                            'fiber_g' => $num,
                         ],
-                        'required' => ['name', 'portion', 'calories', 'protein_g', 'carbs_g', 'sugar_g', 'fat_g'],
+                        'required' => ['name', 'portion', 'calories', 'protein_g', 'carbs_g', 'sugar_g', 'fat_g', 'fiber_g'],
                         'additionalProperties' => false,
                     ],
                 ],
