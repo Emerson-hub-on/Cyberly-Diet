@@ -63,6 +63,7 @@ class DietFlowTest extends TestCase
 
         // Consumo calórico: Calorias consumidas e Histórico de calorias no mesmo carrossel, Nutrientes abaixo
         $this->get('/')->assertSeeInOrder(['x-data="carousel"', 'Calorias consumidas', 'Histórico de calorias (Kcal)', 'Deslize para o lado', 'Nutrientes do dia'], false);
+        $this->get('/?tab=atividade')->assertSeeInOrder(['Atividade do dia', 'Últimos 7 dias', 'Deslize para o lado para ver os últimos 7 dias', 'Registrar atividade']);
     }
 
     public function test_app_is_installable_from_profile(): void

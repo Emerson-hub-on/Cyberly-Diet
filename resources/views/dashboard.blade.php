@@ -79,14 +79,7 @@
             </div>
             </div>
 
-            <div class="mt-3 flex items-center justify-center gap-1">
-                @foreach (['Calorias consumidas', 'Histórico de calorias'] as $i => $slideLabel)
-                    <button type="button" class="p-1" aria-label="{{ $slideLabel }}" @click="go({{ $i }})">
-                        <span class="block h-2 rounded-full transition-all" :class="page === {{ $i }} ? 'w-5 bg-navy-600' : 'w-2 bg-ice-200'"></span>
-                    </button>
-                @endforeach
-            </div>
-            <p x-show="page === 0" class="mt-1 text-center text-[11px] text-slate-400">Deslize para o lado para ver o histórico de calorias →</p>
+            <x-carousel-dots :labels="['Calorias consumidas', 'Histórico de calorias']" hint="Deslize para o lado para ver o histórico de calorias →" />
             </div>
 
             <div class="card">
@@ -165,7 +158,11 @@
 
         {{-- ==================== ATIVIDADE FÍSICA ==================== --}}
         <section x-show="tab === 'atividade'" x-cloak class="space-y-4">
-            <div class="card">
+            {{-- Carrossel: Atividade do dia → Últimos 7 dias --}}
+            <div x-data="carousel">
+            <div x-ref="slides" @scroll.debounce.50ms="onScroll()"
+                 class="no-scrollbar -my-2 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overflow-y-hidden py-2 transition-[height] duration-300">
+            <div class="card w-full shrink-0 snap-start">
                 <h2 class="text-lg font-bold text-slate-800">Atividade do dia</h2>
                 <div class="mt-3 grid grid-cols-2 gap-3">
                     <div class="rounded-xl bg-indigo-50 p-3">
@@ -189,6 +186,14 @@
                         @endforeach
                     </ul>
                 @endif
+            </div>
+
+            <div class="card w-full shrink-0 snap-start">
+                <h2 class="mb-3 text-lg font-bold text-slate-800">Últimos 7 dias</h2>
+                <div class="h-56"><canvas id="chart-activity"></canvas></div>
+            </div>
+            </div>
+            <x-carousel-dots :labels="['Atividade do dia', 'Últimos 7 dias']" hint="Deslize para o lado para ver os últimos 7 dias →" />
             </div>
 
             <form method="POST" action="{{ route('activity.store') }}" class="card space-y-3"
@@ -223,10 +228,6 @@
                 <button class="btn-primary w-full">Salvar atividade</button>
             </form>
 
-            <div class="card">
-                <h2 class="mb-3 text-lg font-bold text-slate-800">Últimos 7 dias</h2>
-                <div class="h-56"><canvas id="chart-activity"></canvas></div>
-            </div>
         </section>
 
         {{-- ==================== ÁGUA ==================== --}}
