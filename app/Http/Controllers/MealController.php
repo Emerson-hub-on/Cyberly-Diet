@@ -113,7 +113,7 @@ class MealController extends Controller
 
         return response()->json([
             'message' => 'Refeição registrada!',
-            'meal' => $meal->only(['id', 'title', 'items', 'calories', 'protein_g', 'carbs_g', 'sugar_g', 'fat_g', 'protein_pct', 'carbs_pct', 'fat_pct', 'goal_pct', 'confidence']),
+            'meal' => $meal->only(['id', 'title', 'items', 'calories', 'protein_g', 'carbs_g', 'sugar_g', 'fat_g', 'fiber_g', 'protein_pct', 'carbs_pct', 'fat_pct', 'goal_pct', 'confidence']),
             'redirect' => route('home', ['tab' => 'calorias', 'data' => $eatenAt->toDateString()]),
         ]);
     }

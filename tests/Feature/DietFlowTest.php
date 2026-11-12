@@ -111,7 +111,7 @@ class DietFlowTest extends TestCase
             'time' => '12:30',
         ]);
 
-        $response->assertOk()->assertJsonPath('meal.calories', 600)->assertJsonPath('meal.goal_pct', 30);
+        $response->assertOk()->assertJsonPath('meal.calories', 600)->assertJsonPath('meal.fiber_g', 8)->assertJsonPath('meal.goal_pct', 30);
 
         $meal = Meal::first();
         // 40*4=160, 70*4=280, 15*9=135 → 575 kcal de macros
@@ -130,6 +130,8 @@ class DietFlowTest extends TestCase
         $this->get('/')->assertOk()->assertSee('Arroz, feijão e frango')->assertSee('600 Kcal')
             ->assertSeeInOrder(['Nome', 'Kcal', 'Carb', 'Prot', 'Gord.', 'Fibra', 'Açúcar', 'Arroz', '150 g', '200', '44', '4', '0,5', '2,3', '0']);
         $this->get('/refeicoes')->assertSeeInOrder(['Fibra', 'Arroz', '150 g', '200', '44']);
+        // Indicador de fibras separado no card da refeição: 8 g = 32% de 25 g
+        $this->get('/refeicoes')->assertSeeInOrder(['Açúcar', '8g', 'Fibras', '32% de 25g', 'Deslize → fibras']);
         $this->get("/refeicoes/{$meal->id}/foto")->assertOk();
         $this->get('/refeicoes')->assertOk()->assertSee('Arroz, feijão e frango');
         $this->get('/perfil')->assertOk()->assertSee('Refeição registrada');

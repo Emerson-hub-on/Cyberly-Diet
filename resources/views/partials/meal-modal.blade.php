@@ -91,12 +91,15 @@
                     <p class="mt-1 text-4xl font-light text-navy-800"><span x-text="result.calories"></span> <span class="text-xl">Kcal</span></p>
                     <p class="text-sm text-slate-500"><span x-text="result.goal_pct"></span>% da sua meta diária</p>
                 </div>
-                <div class="grid grid-cols-4 gap-2 text-center text-xs">
-                    <div class="rounded-xl bg-blue-50 p-2"><p class="text-base font-bold text-protein" x-text="result.protein_g + 'g'"></p>Proteínas<p class="text-slate-400" x-text="result.protein_pct + '%'"></p></div>
-                    <div class="rounded-xl bg-cyan-50 p-2"><p class="text-base font-bold text-carbs" x-text="result.carbs_g + 'g'"></p>Carbos<p class="text-slate-400" x-text="result.carbs_pct + '%'"></p></div>
-                    <div class="rounded-xl bg-indigo-50 p-2"><p class="text-base font-bold text-fat" x-text="result.fat_g + 'g'"></p>Gorduras<p class="text-slate-400" x-text="result.fat_pct + '%'"></p></div>
-                    <div class="rounded-xl bg-slate-50 p-2"><p class="text-base font-bold text-slate-500" x-text="result.sugar_g + 'g'"></p>Açúcar</div>
+                {{-- Indicadores: deslize para o lado para ver as fibras --}}
+                <div class="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto text-center text-xs">
+                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-blue-50 p-2"><p class="text-base font-bold text-protein" x-text="result.protein_g + 'g'"></p>Proteínas<p class="text-slate-400" x-text="result.protein_pct + '%'"></p></div>
+                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-cyan-50 p-2"><p class="text-base font-bold text-carbs" x-text="result.carbs_g + 'g'"></p>Carbos<p class="text-slate-400" x-text="result.carbs_pct + '%'"></p></div>
+                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-indigo-50 p-2"><p class="text-base font-bold text-fat" x-text="result.fat_g + 'g'"></p>Gorduras<p class="text-slate-400" x-text="result.fat_pct + '%'"></p></div>
+                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-slate-50 p-2"><p class="text-base font-bold text-slate-500" x-text="fmt(result.sugar_g) + 'g'"></p>Açúcar</div>
+                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-emerald-50 p-2"><p class="text-base font-bold text-emerald-600" x-text="fmt(result.fiber_g) + 'g'"></p>Fibras<p class="text-slate-400" x-text="Math.round(result.fiber_g / {{ config('diet.fiber_goal_g') }} * 100) + '% de {{ config('diet.fiber_goal_g') }}g'"></p></div>
                 </div>
+                <p class="-mt-3 text-right text-[11px] text-slate-400">Deslize → fibras</p>
                 <div x-show="result.items && result.items.length">
                     <h4 class="mb-2 text-sm font-bold text-slate-700">Alimentos identificados</h4>
                     <div class="overflow-x-auto rounded-xl bg-ice-50 px-2">
