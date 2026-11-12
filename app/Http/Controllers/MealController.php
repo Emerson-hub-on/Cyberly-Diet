@@ -15,9 +15,18 @@ class MealController extends Controller
 {
     public function index(Request $request)
     {
-        $meals = $request->user()->meals()->orderByDesc('eaten_at')->paginate(20);
+        // Por padrão mostra o dia de hoje; ?data=AAAA-MM-DD mostra outro dia
+        try {
+            $date = CarbonImmutable::parse($request->query('data', 'today'))->startOfDay();
+        } catch (\Throwable) {
+            $date = CarbonImmutable::today();
+        }
 
-        return view('meals.index', ['meals' => $meals]);
+        $meals = $request->user()->meals()
+            ->whereBetween('eaten_at', [$date->startOfDay(), $date->endOfDay()])
+            ->orderByDesc('eaten_at')->get();
+
+        return view('meals.index', ['meals' => $meals, 'date' => $date]);
     }
 
     public function store(Request $request, MealAnalyzer $analyzer)

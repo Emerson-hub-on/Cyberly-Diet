@@ -200,7 +200,25 @@ class DietFlowTest extends TestCase
             ->assertSeeInOrder(['Balanço de 06/11/2026', '2.256 kcal', 'Déficit do dia', '0 kcal', 'Nenhuma refeição registrada']);
     }
 
-    public function test_users_cannot_see_other_users_photos(): void
+    public function test_meals_page_shows_only_the_selected_day(): void
+    {
+        $user = User::factory()->create();
+        $user->meals()->create(['meal_type' => 'almoco', 'eaten_at' => now()->setTime(12, 0), 'title' => 'Prato de hoje', 'calories' => 600]);
+        $user->meals()->create(['meal_type' => 'jantar', 'eaten_at' => now()->subDay()->setTime(20, 0), 'title' => 'Prato de ontem', 'calories' => 700]);
+
+        // Padrão: só o dia de hoje, com filtro de data no topo
+        $this->actingAs($user)->get('/refeicoes')->assertOk()
+            ->assertSeeInOrder(['Hoje', 'aria-label="Escolher data"', '1 refeição', '600 kcal', 'Prato de hoje'], false)
+            ->assertDontSee('Prato de ontem');
+
+        // Outro dia pelo filtro
+        $this->get('/refeicoes?data='.now()->subDay()->toDateString())->assertOk()
+            ->assertSee('Ontem')->assertSee('Prato de ontem')->assertSee('700 kcal')->assertDontSee('Prato de hoje');
+
+        $this->get('/refeicoes?data=2020-01-01')->assertOk()->assertSee('Nenhuma refeição registrada neste dia.');
+    }
+
+        public function test_users_cannot_see_other_users_photos(): void
     {
         $owner = User::factory()->create();
         $meal = $owner->meals()->create(['meal_type' => 'jantar', 'eaten_at' => now(), 'photo_path' => 'x.jpg']);
