@@ -5,10 +5,13 @@
 
     // [rótulo, unidade, coluna, passo, o que é, como o sistema calcula]
     $fields = [
-        'Gasto basal' => [
+        'Calorias' => [
             'bmr' => ['Caloria basal', 'kcal', 'bmr_kcal', 1,
                 'O que seu corpo gasta num dia sem exercício: o funcionamento em repouso (respirar, bater o coração, manter a temperatura), a digestão e a rotina (andar pela casa, trabalhar). Muda conforme sexo, idade, altura e peso. Os exercícios são somados à parte, pelas atividades que você registra.',
                 'Taxa metabólica basal pela fórmula de Mifflin-St Jeor (10 × peso + 6,25 × altura − 5 × idade, +5 para homens ou −161 para mulheres) × 1,2 para incluir digestão e rotina. Se o nutricionista passou um valor, digite aqui: ele é usado como está, sem nenhum acréscimo.'],
+            'calories' => ['Calorias/dia', 'kcal', 'calorie_goal', 10,
+                'Quanto comer por dia. É a meta da barra de Calorias consumidas e da previsão de peso.',
+                'A caloria basal. Se o peso meta for menor que o atual, tira 500 kcal (perde cerca de 0,5 kg por semana). Se for maior, soma 300 kcal. Nunca fica abaixo de 1.200 kcal (mulheres) ou 1.500 kcal (homens).'],
         ],
         'Objetivos' => [
             'weight' => ['Peso meta', 'kg', 'weight_goal_kg', 0.1,
@@ -17,9 +20,6 @@
             'water' => ['Água/dia', 'ml', 'water_goal_ml', 50,
                 'Quanto de água beber por dia. É a meta do anel da aba Ingestão de água.',
                 '35 ml por kg de peso corporal.'],
-            'calories' => ['Calorias/dia', 'kcal', 'calorie_goal', 10,
-                'Quanto comer por dia. É a meta da barra de Calorias consumidas e da previsão de peso.',
-                'A caloria basal. Se o peso meta for menor que o atual, tira 500 kcal (perde cerca de 0,5 kg por semana). Se for maior, soma 300 kcal. Nunca fica abaixo de 1.200 kcal (mulheres) ou 1.500 kcal (homens).'],
         ],
         'Macronutrientes por dia' => [
             'protein' => ['Proteína', 'g', 'protein_goal_g', 1,
@@ -73,7 +73,7 @@
                     <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $group }}</h3>
                     <div class="grid grid-cols-2 gap-3">
                         @foreach ($items as $key => [$label, $unit, $name])
-                            <div @class(['col-span-2' => $key === 'bmr'])>
+                            <div>
                                 <div class="mb-1 flex items-center gap-1.5">
                                     <label class="text-sm font-medium text-slate-600" for="goal-{{ $key }}">{{ $label }} <span class="font-normal text-slate-400">({{ $unit }})</span></label>
                                     <button type="button" @click="help = '{{ $key }}'" aria-label="O que é {{ $label }}?"

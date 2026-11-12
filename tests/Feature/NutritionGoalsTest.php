@@ -70,7 +70,7 @@ class NutritionGoalsTest extends TestCase
         $user = $this->person(['calorie_goal' => 1700]);
 
         $this->actingAs($user)->get('/?tab=metas')->assertOk()
-            ->assertSeeInOrder(['Caloria basal', 'Peso meta', 'Água/dia', 'Calorias/dia', 'Proteína', 'Carboidrato', 'Gorduras', 'Fibras', 'Salvar metas'])
+            ->assertSeeInOrder(['Caloria basal', 'Calorias/dia', 'Peso meta', 'Água/dia', 'Proteína', 'Carboidrato', 'Gorduras', 'Fibras', 'Salvar metas'])
             ->assertSee('aria-label="O que é Caloria basal?"', false)
             ->assertSee('Como o sistema calcula')
             ->assertSee('Mifflin-St Jeor');
