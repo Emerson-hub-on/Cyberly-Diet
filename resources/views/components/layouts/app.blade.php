@@ -44,28 +44,29 @@
     {{-- Navegação inferior --}}
     @php($current = request()->route()?->getName())
     {{-- x-data é necessário para o Alpine ativar o @click do botão "+" --}}
-    <nav x-data class="fixed inset-x-0 bottom-0 z-30 border-t border-ice-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-        <div class="mx-auto grid h-16 max-w-md grid-cols-5 items-center text-[11px] font-medium">
-            <a href="{{ route('home') }}" @class(['flex flex-col items-center gap-0.5', 'text-navy-700 font-bold' => $current === 'home' && request('tab', 'calorias') !== 'agua', 'text-slate-400' => ! ($current === 'home' && request('tab', 'calorias') !== 'agua')])>
+    {{-- Menu inferior flutuante com efeito vidro (Liquid Glass) --}}
+    <nav x-data class="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+        <div class="glass-bar pointer-events-auto mx-auto grid h-16 max-w-md grid-cols-5 items-center px-1.5 text-[11px] font-medium">
+            <a href="{{ route('home') }}" @class(['mx-0.5 flex flex-col items-center gap-0.5 py-1.5 transition', 'glass-pill text-navy-700 font-bold' => $current === 'home' && request('tab', 'calorias') !== 'agua', 'text-slate-400' => ! ($current === 'home' && request('tab', 'calorias') !== 'agua')])>
                 <svg class="size-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.47 3.84a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.06l-8.69-8.69a2.25 2.25 0 0 0-3.18 0l-8.69 8.69a.75.75 0 0 0 1.06 1.06l8.69-8.69Z"/><path d="m12 5.43 8.16 8.16.09.08v6.2c0 1.04-.84 1.88-1.88 1.88H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.63a1.88 1.88 0 0 1-1.88-1.88v-6.2l.09-.08L12 5.43Z"/></svg>
                 Início
             </a>
-            <a href="{{ route('meals.index') }}" @class(['flex flex-col items-center gap-0.5', 'text-navy-700 font-bold' => $current === 'meals.index', 'text-slate-400' => $current !== 'meals.index'])>
+            <a href="{{ route('meals.index') }}" @class(['mx-0.5 flex flex-col items-center gap-0.5 py-1.5 transition', 'glass-pill text-navy-700 font-bold' => $current === 'meals.index', 'text-slate-400' => $current !== 'meals.index'])>
                 <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0L3 16.5m15-3.379a48.474 48.474 0 0 0-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 0 1 3 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 0 1 6 13.12M12.265 3.11a.375.375 0 1 1-.53 0L12 2.845l.265.265Z"/></svg>
                 Refeições
             </a>
             <div class="flex justify-center">
                 <button type="button" @click="$store.mealModal.show()"
-                        class="-mt-7 flex size-14 items-center justify-center rounded-full bg-navy-700 text-white shadow-lg shadow-navy-700/40 ring-4 ring-white transition hover:bg-navy-800 active:scale-95"
+                        class="glass-fab -mt-8 flex size-14 items-center justify-center rounded-full text-white transition hover:brightness-110 active:scale-95"
                         aria-label="Adicionar refeição">
                     <svg class="size-7" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                 </button>
             </div>
-            <a href="{{ route('home', ['tab' => 'agua']) }}" @class(['flex flex-col items-center gap-0.5', 'text-navy-700 font-bold' => $current === 'home' && request('tab') === 'agua', 'text-slate-400' => ! ($current === 'home' && request('tab') === 'agua')])>
+            <a href="{{ route('home', ['tab' => 'agua']) }}" @class(['mx-0.5 flex flex-col items-center gap-0.5 py-1.5 transition', 'glass-pill text-navy-700 font-bold' => $current === 'home' && request('tab') === 'agua', 'text-slate-400' => ! ($current === 'home' && request('tab') === 'agua')])>
                 <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5s-6 6.6-6 11a6 6 0 0 0 12 0c0-4.4-6-11-6-11Z"/></svg>
                 Água
             </a>
-            <a href="{{ route('profile') }}" @class(['flex flex-col items-center gap-0.5', 'text-navy-700 font-bold' => $current === 'profile', 'text-slate-400' => $current !== 'profile'])>
+            <a href="{{ route('profile') }}" @class(['mx-0.5 flex flex-col items-center gap-0.5 py-1.5 transition', 'glass-pill text-navy-700 font-bold' => $current === 'profile', 'text-slate-400' => $current !== 'profile'])>
                 <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
                 Perfil
             </a>
