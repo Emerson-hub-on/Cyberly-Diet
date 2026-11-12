@@ -14,9 +14,20 @@
     };
 @endphp
 
+@php
+    $showForecast = isset($p['planned']) && ! $p['reached'];
+    $slideCount = 1 + ($showForecast ? 1 : 0) + (isset($p['weeks']) ? 1 : 0) + ($weights->isNotEmpty() ? 2 : 0);
+@endphp
+
 <section x-show="tab === 'peso'" x-cloak class="space-y-4">
 
+    {{-- Carrossel: deslize para o lado para ver previsão, progressão e gráficos --}}
+    <div x-data="{ page: 0, go(i) { const el = this.$refs.slides; el.scrollTo({ left: i * (el.clientWidth + 12), behavior: 'smooth' }) } }">
+    <div x-ref="slides" @scroll.debounce.50ms="page = Math.round($el.scrollLeft / ($el.clientWidth + 12))"
+         class="no-scrollbar -my-2 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto py-2">
+
     {{-- Peso atual x meta --}}
+    <div class="w-full shrink-0 snap-start space-y-4">
     <div class="card">
         <div class="flex items-start justify-between gap-3">
             <div>
@@ -73,10 +84,11 @@
             <span class="font-semibold underline">Ir para o perfil →</span>
         </a>
     @endif
+    </div>
 
     {{-- Previsão até a meta --}}
-    @if (isset($p['planned']) && ! $p['reached'])
-        <div class="card">
+    @if ($showForecast)
+        <div class="card w-full shrink-0 snap-start">
             <h2 class="text-lg font-bold text-slate-800">Previsão para atingir a meta</h2>
 
             {{-- Déficit real do dia selecionado --}}
@@ -131,7 +143,7 @@
 
     {{-- Progressão: balanço calórico x balança --}}
     @isset($p['weeks'])
-        <div class="card">
+        <div class="card w-full shrink-0 snap-start">
             <h2 class="text-lg font-bold text-slate-800">Progressão</h2>
 
             <div class="mt-3 grid grid-cols-2 gap-3">
@@ -187,6 +199,37 @@
         </div>
     @endisset
 
+    @if ($weights->isNotEmpty())
+        {{-- Gráfico: evolução --}}
+        <div class="card w-full shrink-0 snap-start">
+            <h2 class="mb-3 text-lg font-bold text-slate-800">Evolução do peso (kg)</h2>
+            <div class="h-56"><canvas id="chart-weight"></canvas></div>
+        </div>
+
+        {{-- Gráfico: variação a cada registro --}}
+        <div class="card w-full shrink-0 snap-start">
+            <h2 class="text-lg font-bold text-slate-800">Variação diária (kg)</h2>
+            <p class="mb-3 text-xs text-slate-500">
+                Barra <span class="font-semibold text-emerald-600">verde</span> = {{ $losing || ! $p['goal'] ? 'baixou' : 'subiu' }} (rumo à meta) ·
+                <span class="font-semibold text-rose-500">vermelha</span> = {{ $losing || ! $p['goal'] ? 'aumentou' : 'baixou' }}
+            </p>
+            <div class="h-48"><canvas id="chart-weight-diff"></canvas></div>
+        </div>
+    @endif
+    </div>
+
+    @if ($slideCount > 1)
+        <div class="mt-3 flex items-center justify-center gap-1">
+            @for ($i = 0; $i < $slideCount; $i++)
+                <button type="button" class="p-1" aria-label="Card {{ $i + 1 }} de {{ $slideCount }}" @click="go({{ $i }})">
+                    <span class="block h-2 rounded-full transition-all" :class="page === {{ $i }} ? 'w-5 bg-navy-600' : 'w-2 bg-ice-200'"></span>
+                </button>
+            @endfor
+        </div>
+        <p x-show="page === 0" class="mt-1 text-center text-[11px] text-slate-400">Deslize para o lado para ver previsão, progressão e gráficos →</p>
+    @endif
+    </div>
+
     {{-- Registrar peso (já preenchido com o último registro salvo) --}}
     @php($todayLog = $weights->first(fn ($w) => $w->measured_on->isSameDay($date)))
     <form method="POST" action="{{ route('weight.store') }}" class="card space-y-3">
@@ -215,22 +258,6 @@
     @if ($weights->isEmpty())
         <div class="card py-8 text-center text-sm text-slate-400">Registre seu peso para ver o histórico e os gráficos.</div>
     @else
-        {{-- Gráfico: evolução --}}
-        <div class="card">
-            <h2 class="mb-3 text-lg font-bold text-slate-800">Evolução do peso (kg)</h2>
-            <div class="h-56"><canvas id="chart-weight"></canvas></div>
-        </div>
-
-        {{-- Gráfico: variação a cada registro --}}
-        <div class="card">
-            <h2 class="text-lg font-bold text-slate-800">Variação diária (kg)</h2>
-            <p class="mb-3 text-xs text-slate-500">
-                Barra <span class="font-semibold text-emerald-600">verde</span> = {{ $losing || ! $p['goal'] ? 'baixou' : 'subiu' }} (rumo à meta) ·
-                <span class="font-semibold text-rose-500">vermelha</span> = {{ $losing || ! $p['goal'] ? 'aumentou' : 'baixou' }}
-            </p>
-            <div class="h-48"><canvas id="chart-weight-diff"></canvas></div>
-        </div>
-
         {{-- Histórico diário --}}
         <div class="card" x-data="{ all: false }">
             <h2 class="mb-2 text-lg font-bold text-slate-800">Histórico de peso diário</h2>
