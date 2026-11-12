@@ -171,7 +171,6 @@
                         <tr @class(['font-semibold text-slate-800 '.$row['badge'] => $row['current'], 'text-slate-600' => ! $row['current']])>
                             <td class="rounded-l-lg py-1.5 pl-2">
                                 <span class="mr-1 inline-block size-2 rounded-full {{ $row['dot'] }}"></span>{{ $row['label'] }}
-                                @if ($row['current']) <span class="text-[10px] font-normal">← você</span> @endif
                                 @if ($row['goal'] && ! $row['current']) <span class="text-[10px]">🎯 meta</span> @endif
                             </td>
                             <td class="py-1.5 text-right">{{ $row['bmi'] }}</td>

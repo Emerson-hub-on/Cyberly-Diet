@@ -236,12 +236,13 @@ class DietFlowTest extends TestCase
             ->assertSeeInOrder(['Peso atual', 'IMC', '38,6', 'Obesidade grau II', 'Classificação',
                 'Peso normal', '18,5 – 24,9', '59,9 – 80,9',
                 'Sobrepeso', '🎯 meta',
-                'Obesidade grau II', '← você', '113,4 – 129,5',
+                'Obesidade grau II', '113,4 – 129,5',
                 'Até a meta de 95,0 kg', 'IMC da meta: <b>29,3</b> (Sobrepeso)', 'Faltam <b>30,0 kg</b>', '−9,3 pontos de IMC',
                 'Próxima faixa (Obesidade grau I): faltam 11,7 kg', 'Previsão para atingir a meta'], false);
+        $this->get('/?tab=peso')->assertDontSee('← você');
     }
 
-        public function test_users_cannot_see_other_users_photos(): void
+    public function test_users_cannot_see_other_users_photos(): void
     {
         $owner = User::factory()->create();
         $meal = $owner->meals()->create(['meal_type' => 'jantar', 'eaten_at' => now(), 'photo_path' => 'x.jpg']);
