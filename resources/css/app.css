@@ -111,3 +111,10 @@ input[type='date'].date-overlay {
 .no-scrollbar {
     scrollbar-width: none;
 }
+
+/* Faixa de nutrientes da refeição: 4 visíveis + a ponta do 5º (deslize para ver as fibras) */
+.nutrient-tile {
+    width: calc((100% - 1.5rem) / 4.25);
+    flex-shrink: 0;
+    scroll-snap-align: start;
+}

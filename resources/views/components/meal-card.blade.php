@@ -60,11 +60,11 @@
                 </div>
                 {{-- Indicadores: deslize para o lado para ver as fibras --}}
                 <div class="no-scrollbar mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto text-center text-xs">
-                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-cyan-50 p-2"><p class="text-base font-bold text-carbs">{{ $g($meal->carbs_g) }}g</p>Carbos<p class="text-slate-400">{{ $g($meal->carbs_pct) }}%</p></div>
-                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-blue-50 p-2"><p class="text-base font-bold text-protein">{{ $g($meal->protein_g) }}g</p>Proteínas<p class="text-slate-400">{{ $g($meal->protein_pct) }}%</p></div>
-                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-indigo-50 p-2"><p class="text-base font-bold text-fat">{{ $g($meal->fat_g) }}g</p>Gorduras<p class="text-slate-400">{{ $g($meal->fat_pct) }}%</p></div>
-                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-slate-50 p-2"><p class="text-base font-bold text-slate-500">{{ $g($meal->sugar_g) }}g</p>Açúcar</div>
-                    <div class="w-[calc((100%-1.5rem)/4.25)] shrink-0 snap-start rounded-xl bg-emerald-50 p-2"><p class="text-base font-bold text-emerald-600">{{ $g($meal->fiber_g) }}g</p>Fibras<p class="text-slate-400">{{ $fiberPct }}% de {{ $fiberGoal }}g</p></div>
+                    <div class="nutrient-tile rounded-xl bg-cyan-50 p-2"><p class="text-base font-bold text-carbs">{{ $g($meal->carbs_g) }}g</p>Carbos<p class="text-slate-400">{{ $g($meal->carbs_pct) }}%</p></div>
+                    <div class="nutrient-tile rounded-xl bg-blue-50 p-2"><p class="text-base font-bold text-protein">{{ $g($meal->protein_g) }}g</p>Proteínas<p class="text-slate-400">{{ $g($meal->protein_pct) }}%</p></div>
+                    <div class="nutrient-tile rounded-xl bg-indigo-50 p-2"><p class="text-base font-bold text-fat">{{ $g($meal->fat_g) }}g</p>Gorduras<p class="text-slate-400">{{ $g($meal->fat_pct) }}%</p></div>
+                    <div class="nutrient-tile rounded-xl bg-slate-50 p-2"><p class="text-base font-bold text-slate-500">{{ $g($meal->sugar_g) }}g</p>Açúcar</div>
+                    <div class="nutrient-tile rounded-xl bg-emerald-50 p-2"><p class="text-base font-bold text-emerald-600">{{ $g($meal->fiber_g) }}g</p>Fibras<p class="text-slate-400">{{ $fiberPct }}% de {{ $fiberGoal }}g</p></div>
                 </div>
                 <p class="mt-1 flex justify-between gap-2 text-[11px] text-slate-400"><span>% = participação nas calorias da refeição</span><span class="shrink-0">Deslize → fibras</span></p>
 
