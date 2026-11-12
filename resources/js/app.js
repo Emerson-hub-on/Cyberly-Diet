@@ -308,6 +308,95 @@ function lineChart(id, labels, datasets) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Metas: sugestões automáticas com recálculo ao vivo.                */
+/* Mesmas fórmulas de app/Services/NutritionGoals.php.                */
+/* ------------------------------------------------------------------ */
+const GOAL_FIELDS = ['bmr', 'weight', 'water', 'calories', 'protein', 'carbs', 'fat', 'fiber'];
+
+Alpine.data('goalsForm', ({ inputs, own }) => ({
+    inputs,
+    vals: Object.fromEntries(GOAL_FIELDS.map((f) => [f, own[f]])),
+    auto: Object.fromEntries(GOAL_FIELDS.map((f) => [f, own[f] === null])),
+
+    get autoList() {
+        return GOAL_FIELDS.filter((f) => this.auto[f]).join(',');
+    },
+
+    show(field) {
+        return this.auto[field] ? this.suggest(field) : this.vals[field];
+    },
+
+    set(field, raw) {
+        if (raw === '') {
+            this.auto[field] = true; // campo apagado volta para o automático
+            return;
+        }
+        this.vals[field] = Number(raw);
+        this.auto[field] = false;
+    },
+
+    reset(field) {
+        this.auto[field] = true;
+    },
+
+    resetAll() {
+        GOAL_FIELDS.forEach((f) => (this.auto[f] = true));
+    },
+
+    suggest(field) {
+        const { weight, height, age, sex } = this.inputs;
+        const cal = () => this.show('calories');
+        switch (field) {
+            case 'bmr':
+                if (weight == null || !height || !sex || age == null) return null;
+                return Math.round(10 * weight + 6.25 * height - 5 * age + (sex === 'F' ? -161 : 5));
+            case 'weight': {
+                if (weight == null || !height) return null;
+                const h2 = (height / 100) ** 2;
+                return Math.round(Math.min(Math.max(weight, 18.5 * h2), 24.9 * h2) * 2) / 2;
+            }
+            case 'water':
+                return weight == null ? 2000 : Math.round((weight * 35) / 50) * 50;
+            case 'calories': {
+                const bmr = this.show('bmr');
+                if (!bmr) return 2000;
+                let kcal = bmr * 1.2;
+                const goal = this.show('weight');
+                if (weight != null && goal != null) {
+                    if (goal < weight - 0.5) kcal -= 500;
+                    else if (goal > weight + 0.5) kcal += 300;
+                }
+                return Math.round(Math.max(kcal, sex === 'F' ? 1200 : 1500) / 10) * 10;
+            }
+            case 'protein': {
+                const ref = this.show('weight') ?? weight ?? 70;
+                return Math.round(Math.min(ref * 1.6, (cal() * 0.35) / 4));
+            }
+            case 'fat':
+                return Math.round((cal() * 0.3) / 9);
+            case 'carbs':
+                return Math.max(0, Math.round((cal() - this.show('protein') * 4 - this.show('fat') * 9) / 4));
+            case 'fiber':
+                return Math.max(25, Math.round((cal() / 1000) * 14));
+        }
+        return null;
+    },
+
+    macroKcal() {
+        return (this.show('protein') || 0) * 4 + (this.show('carbs') || 0) * 4 + (this.show('fat') || 0) * 9;
+    },
+
+    macroPct(field, kcalPerGram) {
+        const cal = this.show('calories');
+        return cal ? Math.round(((this.show(field) || 0) * kcalPerGram / cal) * 100) : 0;
+    },
+
+    fmt(v) {
+        return v == null ? '—' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    },
+}));
+
+/* ------------------------------------------------------------------ */
 /* Carrossel de cards (deslizar para o lado). A altura acompanha o     */
 /* card visível, sem espaço vazio quando um card é mais baixo.         */
 /* Uso: x-data="carousel" com x-ref="slides" no contêiner rolável.    */

@@ -125,13 +125,13 @@ class DietFlowTest extends TestCase
         $response->assertJsonPath('meal.items.0.name', 'Arroz');
 
         // Tabela por alimento: Nome | Kcal | Carb | Prot | Gord. | Fibra | Açúcar
-        // Nutrientes do dia: 2ª página com açúcar (limite 10% de 2000 kcal = 50 g) e fibras (25 g)
-        $this->get('/')->assertOk()->assertSeeInOrder(['Proteínas', 'Carbos', 'Gorduras', '3g', 'de 50g', 'Açúcar', '8g', 'de 25g', 'Fibras']);
+        // Nutrientes do dia: 2ª página com açúcar (limite 10% de 2000 kcal = 50 g) e fibras (meta automática: 14 g/1000 kcal = 28 g)
+        $this->get('/')->assertOk()->assertSeeInOrder(['Proteínas', 'Carbos', 'Gorduras', '3g', 'de 50g', 'Açúcar', '8g', 'de 28g', 'Fibras']);
         $this->get('/')->assertOk()->assertSee('Arroz, feijão e frango')->assertSee('600 Kcal')
             ->assertSeeInOrder(['Nome', 'Kcal', 'Carb', 'Prot', 'Gord.', 'Fibra', 'Açúcar', 'Arroz', '150 g', '200', '44', '4', '0,5', '2,3', '0']);
         $this->get('/refeicoes')->assertSeeInOrder(['Fibra', 'Arroz', '150 g', '200', '44']);
-        // Indicador de fibras separado no card da refeição: 8 g = 32% de 25 g
-        $this->get('/refeicoes')->assertSeeInOrder(['Açúcar', '8g', 'Fibras', '32% de 25g', 'Deslize → fibras']);
+        // Indicador de fibras separado no card da refeição: 8 g = 29% de 28 g
+        $this->get('/refeicoes')->assertSeeInOrder(['Açúcar', '8g', 'Fibras', '29% de 28g', 'Deslize → fibras']);
         $this->get("/refeicoes/{$meal->id}/foto")->assertOk();
         $this->get('/refeicoes')->assertOk()->assertSee('Arroz, feijão e frango');
         $this->get('/perfil')->assertOk()->assertSee('Refeição registrada');
@@ -162,7 +162,8 @@ class DietFlowTest extends TestCase
         $this->actingAs($user)->post('/peso', ['weight_kg' => 82.4, 'measured_on' => $today])->assertRedirect();
         $this->post('/atividades', ['activity' => 'Corrida', 'duration_min' => 30, 'calories_burned' => 300, 'performed_on' => $today])->assertRedirect();
         $this->post('/agua', ['amount_ml' => 500, 'date' => $today])->assertRedirect();
-        $this->put('/metas', ['calorie_goal' => 1800, 'water_goal_ml' => 2500, 'height_cm' => 178])->assertRedirect();
+        $this->put('/perfil/informacoes', ['sex' => 'M', 'birth_date' => '1990-05-10', 'height_cm' => 178])->assertRedirect('/perfil');
+        $this->put('/metas', ['calorie_goal' => 1800, 'water_goal_ml' => 2500])->assertRedirect('/?tab=metas');
 
         foreach (['peso', 'atividade', 'agua'] as $tab) {
             $this->get("/?tab={$tab}")->assertOk();
@@ -171,7 +172,7 @@ class DietFlowTest extends TestCase
         $this->get('/?tab=agua')->assertSee('0,50 L')
             ->assertSeeInOrder(['Ingestão de água', 'Histórico de água (ml)', 'Deslize para o lado para ver o histórico de água', 'Registros do dia', '500 ml']);
         $this->assertSame(1800, $user->fresh()->calorie_goal);
-        $this->assertDatabaseCount('events', 4);
+        $this->assertDatabaseCount('events', 5);
     }
 
     public function test_weight_projection_shows_real_deficit_of_the_day(): void

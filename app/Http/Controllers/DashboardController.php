@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\NutritionGoals;
 use App\Services\WeightProgress;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
@@ -10,11 +11,12 @@ use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
-    private const TABS = ['calorias', 'peso', 'atividade', 'agua'];
+    private const TABS = ['calorias', 'peso', 'atividade', 'agua', 'metas'];
 
     public function index(Request $request, WeightProgress $progress)
     {
         $user = $request->user();
+        $nutrition = NutritionGoals::for($user);
         $tab = in_array($request->query('tab'), self::TABS, true) ? $request->query('tab') : 'calorias';
 
         try {
@@ -39,7 +41,7 @@ class DashboardController extends Controller
             'fiber_g' => round($meals->sum('fiber_g'), 1),
         ];
         $split = \App\Models\Meal::macroSplit($totals['protein_g'], $totals['carbs_g'], $totals['fat_g']);
-        $goal = $user->calorie_goal ?: config('diet.defaults.calorie_goal');
+        $goal = $nutrition['values']['calories'];
         $goalPct = $goal > 0 ? round($totals['calories'] / $goal * 100, 1) : 0;
 
         $weekMeals = $user->meals()->whereBetween('eaten_at', [$weekStart, $dayEnd])->get(['eaten_at', 'calories']);
@@ -83,7 +85,7 @@ class DashboardController extends Controller
         // ---------- Água ----------
         $waterLogs = $user->waterLogs()->whereBetween('logged_at', [$dayStart, $dayEnd])->orderBy('logged_at')->get();
         $waterTotal = (int) $waterLogs->sum('amount_ml');
-        $waterGoal = $user->water_goal_ml ?: config('diet.defaults.water_goal_ml');
+        $waterGoal = $nutrition['values']['water'];
         $weekWater = $user->waterLogs()->whereBetween('logged_at', [$weekStart, $dayEnd])->get(['logged_at', 'amount_ml']);
         $waterChart = $this->dailySeries($weekStart, $date, $weekWater, fn ($w) => $w->logged_at, 'amount_ml');
 
@@ -96,6 +98,7 @@ class DashboardController extends Controller
             'totals' => $totals,
             'split' => $split,
             'goal' => $goal,
+            'nutrition' => $nutrition,
             'goalPct' => $goalPct,
             'latestWeight' => $latestWeight,
             'weights' => $weights,
@@ -111,7 +114,7 @@ class DashboardController extends Controller
             'waterGoal' => $waterGoal,
             'charts' => [
                 'calories' => $caloriesChart + ['goal' => $goal],
-                'weight' => $weightChart + ['goal' => $user->weight_goal_kg],
+                'weight' => $weightChart + ['goal' => $nutrition['values']['weight']],
                 'activity' => $activityChart + ['kcal' => $activityKcalChart['values']],
                 'water' => $waterChart + ['goal' => $waterGoal],
             ],

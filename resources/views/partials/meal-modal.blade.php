@@ -1,3 +1,4 @@
+@php($fiberGoal = \App\Services\NutritionGoals::for(auth()->user())['values']['fiber'])
 {{-- Modal "Nova refeição": foto do prato + tipo de refeição → análise por IA --}}
 <div x-data x-cloak x-show="$store.mealModal.open" class="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
      @keydown.escape.window="$store.mealModal.hide()">
@@ -97,7 +98,7 @@
                     <div class="nutrient-tile rounded-xl bg-cyan-50 p-2"><p class="text-base font-bold text-carbs" x-text="result.carbs_g + 'g'"></p>Carbos<p class="text-slate-400" x-text="result.carbs_pct + '%'"></p></div>
                     <div class="nutrient-tile rounded-xl bg-indigo-50 p-2"><p class="text-base font-bold text-fat" x-text="result.fat_g + 'g'"></p>Gorduras<p class="text-slate-400" x-text="result.fat_pct + '%'"></p></div>
                     <div class="nutrient-tile rounded-xl bg-slate-50 p-2"><p class="text-base font-bold text-slate-500" x-text="fmt(result.sugar_g) + 'g'"></p>Açúcar</div>
-                    <div class="nutrient-tile rounded-xl bg-emerald-50 p-2"><p class="text-base font-bold text-emerald-600" x-text="fmt(result.fiber_g) + 'g'"></p>Fibras<p class="text-slate-400" x-text="Math.round(result.fiber_g / {{ config('diet.fiber_goal_g') }} * 100) + '% de {{ config('diet.fiber_goal_g') }}g'"></p></div>
+                    <div class="nutrient-tile rounded-xl bg-emerald-50 p-2"><p class="text-base font-bold text-emerald-600" x-text="fmt(result.fiber_g) + 'g'"></p>Fibras<p class="text-slate-400" x-text="Math.round(result.fiber_g / {{ $fiberGoal }} * 100) + '% de {{ $fiberGoal }}g'"></p></div>
                 </div>
                 <p class="-mt-3 text-right text-[11px] text-slate-400">Deslize → fibras</p>
                 <div x-show="result.items && result.items.length">

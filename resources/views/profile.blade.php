@@ -7,6 +7,7 @@
         'water.logged' => ['💧', 'Água registrada'],
         'goals.updated' => ['🎯', 'Metas atualizadas'],
         'password.changed' => ['🔒', 'Senha alterada'],
+        'profile.updated' => ['👤', 'Informações pessoais atualizadas'],
         'user.registered' => ['✨', 'Conta criada'],
     ];
 @endphp
@@ -68,42 +69,65 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('goals.update') }}" class="card space-y-3">
-            @csrf @method('PUT')
-            <h2 class="text-lg font-bold text-slate-800">Metas</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="label" for="calorie_goal">Calorias/dia (kcal)</label>
-                    <input id="calorie_goal" name="calorie_goal" type="number" min="500" max="10000" class="input" value="{{ old('calorie_goal', $user->calorie_goal) }}" required>
+        {{-- Informações pessoais (usadas no cálculo da TMB e das metas automáticas) --}}
+        @php($infoErrors = $errors->getBag('info'))
+        <div x-data="{ editing: {{ $infoErrors->any() ? 'true' : 'false' }} }" id="informacoes" class="card">
+            <h2 class="text-lg font-bold text-slate-800">Informações pessoais</h2>
+
+            <dl x-show="!editing" class="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div class="rounded-xl bg-ice-50 px-2 py-3">
+                    <dt class="text-xs text-slate-500">Sexo</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-800">{{ ['M' => 'Masculino', 'F' => 'Feminino'][$user->sex] ?? '—' }}</dd>
                 </div>
-                <div>
-                    <label class="label" for="water_goal_ml">Água/dia (ml)</label>
-                    <input id="water_goal_ml" name="water_goal_ml" type="number" min="250" max="10000" step="50" class="input" value="{{ old('water_goal_ml', $user->water_goal_ml) }}" required>
+                <div class="rounded-xl bg-ice-50 px-2 py-3">
+                    <dt class="text-xs text-slate-500">Nascimento</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-800">{{ $user->birth_date?->format('d/m/Y') ?? '—' }}</dd>
+                    @if ($user->age() !== null)
+                        <dd class="text-[11px] text-slate-400">{{ $user->age() }} anos</dd>
+                    @endif
                 </div>
-                <div>
-                    <label class="label" for="weight_goal_kg">Peso meta (kg)</label>
-                    <input id="weight_goal_kg" name="weight_goal_kg" type="number" step="0.1" min="20" max="400" class="input" value="{{ old('weight_goal_kg', $user->weight_goal_kg) }}">
+                <div class="rounded-xl bg-ice-50 px-2 py-3">
+                    <dt class="text-xs text-slate-500">Altura</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-800">{{ $user->height_cm ? $user->height_cm . ' cm' : '—' }}</dd>
                 </div>
-                <div>
-                    <label class="label" for="height_cm">Altura (cm)</label>
-                    <input id="height_cm" name="height_cm" type="number" min="50" max="250" class="input" value="{{ old('height_cm', $user->height_cm) }}">
+            </dl>
+
+            <form x-show="editing" x-cloak x-transition method="POST" action="{{ route('profile.update') }}" class="mt-3 space-y-3">
+                @csrf @method('PUT')
+                @if ($infoErrors->any())
+                    <p class="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{{ $infoErrors->first() }}</p>
+                @endif
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="label" for="sex">Sexo</label>
+                        <select id="sex" name="sex" class="input" required>
+                            <option value="">—</option>
+                            <option value="M" @selected(old('sex', $user->sex) === 'M')>Masculino</option>
+                            <option value="F" @selected(old('sex', $user->sex) === 'F')>Feminino</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label" for="height_cm">Altura (cm)</label>
+                        <input id="height_cm" name="height_cm" type="number" min="50" max="250" inputmode="numeric" class="input" value="{{ old('height_cm', $user->height_cm) }}">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="label" for="birth_date">Nascimento</label>
+                        <input id="birth_date" name="birth_date" type="date" class="input" required value="{{ old('birth_date', $user->birth_date?->toDateString()) }}">
+                    </div>
                 </div>
-                <div>
-                    <label class="label" for="sex">Sexo</label>
-                    <select id="sex" name="sex" class="input">
-                        <option value="">—</option>
-                        <option value="M" @selected(old('sex', $user->sex) === 'M')>Masculino</option>
-                        <option value="F" @selected(old('sex', $user->sex) === 'F')>Feminino</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="label" for="birth_date">Nascimento</label>
-                    <input id="birth_date" name="birth_date" type="date" class="input" value="{{ old('birth_date', $user->birth_date?->toDateString()) }}">
-                </div>
-            </div>
-            <p class="text-xs text-slate-400">Altura, sexo e idade são usados para calcular seu gasto calórico diário (metabolismo basal) e a previsão de quando você atinge o peso meta.</p>
-            <button class="btn-primary w-full">Salvar metas</button>
-        </form>
+                <button class="btn-primary w-full">Salvar informações</button>
+                <button type="button" class="w-full text-center text-sm font-semibold text-slate-500" @click="editing = false">Cancelar</button>
+            </form>
+
+            <button x-show="!editing" type="button" @click="editing = true" class="btn-ghost mt-3 w-full">
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+                Editar informações
+            </button>
+            <p class="mt-3 text-xs text-slate-400">
+                Sexo, idade, altura e peso são usados para calcular a caloria basal e as
+                <a href="{{ route('home', ['tab' => 'metas']) }}" class="font-semibold text-navy-600 underline">metas</a> automáticas.
+            </p>
+        </div>
 
         {{-- Alterar senha --}}
         @php($pwErrors = $errors->getBag('password'))

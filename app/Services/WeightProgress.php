@@ -33,10 +33,14 @@ class WeightProgress
         return $sex === 'F' ? $base - 161 : $base + 5;
     }
 
-    /** Gasto diário sem contar exercícios (TMB × 1,2). */
-    public static function baseExpenditure(float $weightKg, int $heightCm, int $age, string $sex): float
+    /**
+     * Gasto diário sem contar exercícios (TMB × 1,2).
+     * $bmrOffset: diferença entre a TMB informada pelo usuário (ex.: nutricionista) e a fórmula,
+     * mantida enquanto o peso muda.
+     */
+    public static function baseExpenditure(float $weightKg, int $heightCm, int $age, string $sex, float $bmrOffset = 0): float
     {
-        return self::bmr($weightKg, $heightCm, $age, $sex) * self::SEDENTARY_FACTOR;
+        return (self::bmr($weightKg, $heightCm, $age, $sex) + $bmrOffset) * self::SEDENTARY_FACTOR;
     }
 
     public static function metFor(string $activity): float
@@ -70,18 +74,18 @@ class WeightProgress
      *
      * @return array{days: ?int, equilibrium_kg: ?float}
      */
-    public static function project(float $weight, float $goal, float $intakePerDay, float $activityPerDay, int $heightCm, int $age, string $sex): array
+    public static function project(float $weight, float $goal, float $intakePerDay, float $activityPerDay, int $heightCm, int $age, string $sex, float $bmrOffset = 0): array
     {
         $direction = $goal < $weight ? -1 : 1; // -1 = perder, 1 = ganhar
         $kcalPerKg = config('diet.kcal_per_kg');
 
         // Peso em que o gasto se iguala à ingestão (ponto onde o peso estabiliza)
         $sexConst = $sex === 'F' ? -161 : 5;
-        $equilibrium = (($intakePerDay - $activityPerDay) / self::SEDENTARY_FACTOR - 6.25 * $heightCm + 5 * $age - $sexConst) / 10;
+        $equilibrium = (($intakePerDay - $activityPerDay) / self::SEDENTARY_FACTOR - $bmrOffset - 6.25 * $heightCm + 5 * $age - $sexConst) / 10;
 
         $w = $weight;
         for ($day = 1; $day <= 3650; $day++) {
-            $balance = $intakePerDay - self::baseExpenditure($w, $heightCm, $age, $sex) - $activityPerDay;
+            $balance = $intakePerDay - self::baseExpenditure($w, $heightCm, $age, $sex, $bmrOffset) - $activityPerDay;
 
             // Balanço no sentido errado (ex.: quer perder mas está em superávit)
             if ($balance * $direction <= 0) {
@@ -109,7 +113,8 @@ class WeightProgress
 
         $current = $weights->last();
         $start = $weights->first();
-        $goal = $user->weight_goal_kg;
+        $nutrition = NutritionGoals::for($user);
+        $goal = $nutrition['values']['weight'];
 
         $missing = array_keys(array_filter([
             'peso atual' => ! $current,
@@ -147,14 +152,16 @@ class WeightProgress
         $age = $user->age();
         $height = $user->height_cm;
         $sex = $user->sex;
-        $intakeGoal = $user->calorie_goal ?: config('diet.defaults.calorie_goal');
+        $intakeGoal = $nutrition['values']['calories'];
+        // TMB personalizada: mantém a diferença para a fórmula enquanto o peso muda
+        $offset = $nutrition['auto']['bmr'] ? 0.0 : $user->bmr_kcal - self::bmr($current->weight_kg, $height, $age, $sex);
 
-        $daily = $this->dailyBalances($user, $date->subDays(55), $date, $weights, $height, $age, $sex);
+        $daily = $this->dailyBalances($user, $date->subDays(55), $date, $weights, $height, $age, $sex, $offset);
         $last7 = $daily->slice(-7);
         $avgActivity = round($last7->avg('activity'), 0);
         $loggedDays = $last7->where('logged', true);
 
-        $base = self::baseExpenditure($current->weight_kg, $height, $age, $sex);
+        $base = self::baseExpenditure($current->weight_kg, $height, $age, $sex, $offset);
 
         // Déficit do dia selecionado: gasto basal + atividades do dia − refeições do dia.
         // Sem refeições registradas o consumo é desconhecido, então o déficit fica zerado.
@@ -166,7 +173,7 @@ class WeightProgress
         ];
 
         $plannedDeficit = round($base + $avgActivity - $intakeGoal);
-        $planned = self::project($current->weight_kg, $goal, $intakeGoal, $avgActivity, $height, $age, $sex);
+        $planned = self::project($current->weight_kg, $goal, $intakeGoal, $avgActivity, $height, $age, $sex, $offset);
 
         $real = null;
         if ($loggedDays->count() >= 3) {
@@ -176,17 +183,18 @@ class WeightProgress
                 'days_logged' => $loggedDays->count(),
                 'avg_intake' => (int) round($avgIntake),
                 'deficit' => (int) round($base + $realActivity - $avgIntake),
-            ] + self::project($current->weight_kg, $goal, $avgIntake, $realActivity, $height, $age, $sex);
+            ] + self::project($current->weight_kg, $goal, $avgIntake, $realActivity, $height, $age, $sex, $offset);
         }
 
         // Mudança esperada pelo balanço calórico x mudança real, desde a primeira pesagem
         $sinceStart = $start
-            ? $this->dailyBalances($user, CarbonImmutable::parse($start->measured_on), $date, $weights, $height, $age, $sex)
+            ? $this->dailyBalances($user, CarbonImmutable::parse($start->measured_on), $date, $weights, $height, $age, $sex, $offset)
             : collect();
         $expectedChange = $sinceStart->where('logged', true)->sum('balance') / config('diet.kcal_per_kg');
 
         return $result + [
-            'bmr' => (int) round(self::bmr($current->weight_kg, $height, $age, $sex)),
+            'bmr' => (int) round(self::bmr($current->weight_kg, $height, $age, $sex) + $offset),
+            'bmr_custom' => ! $nutrition['auto']['bmr'],
             'base_expenditure' => (int) round($base),
             'intake_goal' => $intakeGoal,
             'avg_activity' => (int) $avgActivity,
@@ -205,7 +213,7 @@ class WeightProgress
      * Balanço de cada dia: consumo (refeições) − gasto basal − atividades.
      * "logged" = houve refeições registradas no dia (dias sem registro não entram no déficit real).
      */
-    private function dailyBalances(User $user, CarbonImmutable $from, CarbonImmutable $to, Collection $weights, int $height, int $age, string $sex): Collection
+    private function dailyBalances(User $user, CarbonImmutable $from, CarbonImmutable $to, Collection $weights, int $height, int $age, string $sex, float $offset = 0): Collection
     {
         $from = $from->startOfDay();
         $to = $to->endOfDay();
@@ -215,11 +223,11 @@ class WeightProgress
         $activity = $user->activityLogs()->whereBetween('performed_on', [$from, $to])->get(['performed_on', 'calories_burned'])
             ->groupBy(fn ($a) => $a->performed_on->toDateString())->map->sum('calories_burned');
 
-        return collect(CarbonPeriod::create($from, $to->startOfDay()))->map(function ($day) use ($intake, $activity, $weights, $height, $age, $sex) {
+        return collect(CarbonPeriod::create($from, $to->startOfDay()))->map(function ($day) use ($intake, $activity, $weights, $height, $age, $sex, $offset) {
             $key = $day->toDateString();
             $weight = $weights->filter(fn (WeightLog $w) => $w->measured_on->toDateString() <= $key)->last()?->weight_kg
                 ?? $weights->first()?->weight_kg ?? self::FALLBACK_WEIGHT_KG;
-            $base = self::baseExpenditure($weight, $height, $age, $sex);
+            $base = self::baseExpenditure($weight, $height, $age, $sex, $offset);
             $in = (int) ($intake[$key] ?? 0);
             $act = (int) ($activity[$key] ?? 0);
 

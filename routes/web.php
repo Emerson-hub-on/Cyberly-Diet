@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/agua/{log}', [TrackingController::class, 'destroyWater'])->name('water.destroy');
 
     Route::get('/perfil', [ProfileController::class, 'show'])->name('profile');
+    Route::put('/perfil/informacoes', [ProfileController::class, 'updateInfo'])->name('profile.update');
     Route::put('/perfil/senha', [ProfileController::class, 'updatePassword'])->name('password.update');
     Route::put('/metas', [TrackingController::class, 'updateGoals'])->name('goals.update');
 });

@@ -68,7 +68,7 @@ class MealController extends Controller
         $carbs = round((float) $t['carbs_g'], 1);
         $fat = round((float) $t['fat_g'], 1);
         $calories = (int) round((float) $t['calories']);
-        $goal = $user->calorie_goal ?: config('diet.defaults.calorie_goal');
+        $goal = \App\Services\NutritionGoals::for($user)['values']['calories'];
 
         $meal = $user->meals()->create([
             'meal_type' => $data['meal_type'],

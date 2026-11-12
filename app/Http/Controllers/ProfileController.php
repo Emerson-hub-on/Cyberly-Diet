@@ -18,6 +18,27 @@ class ProfileController extends Controller
         ]);
     }
 
+    /** Informações pessoais (sexo, nascimento, altura): usadas no cálculo da TMB e das metas automáticas. */
+    public function updateInfo(Request $request)
+    {
+        $data = $request->validateWithBag('info', [
+            'sex' => ['required', 'in:M,F'],
+            'birth_date' => ['required', 'date', 'before:today', 'after:1900-01-01'],
+            'height_cm' => ['nullable', 'integer', 'between:50,250'],
+        ], [
+            'sex.required' => 'Informe o sexo.',
+            'birth_date.required' => 'Informe a data de nascimento.',
+            'birth_date.before' => 'A data de nascimento deve ser anterior a hoje.',
+            'height_cm.between' => 'A altura deve estar entre 50 e 250 cm.',
+        ]);
+
+        $user = $request->user();
+        $user->update($data);
+        $user->logEvent('profile.updated', null, $data);
+
+        return redirect()->route('profile')->with('status', 'Informações atualizadas.');
+    }
+
     public function updatePassword(Request $request)
     {
         $data = $request->validateWithBag('password', [

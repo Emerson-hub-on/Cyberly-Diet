@@ -20,7 +20,7 @@
 
         {{-- Abas --}}
         <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-            @foreach (['calorias' => 'Consumo calórico', 'peso' => 'Peso corporal', 'atividade' => 'Atividade física', 'agua' => 'Ingestão de água'] as $key => $label)
+            @foreach (['calorias' => 'Consumo calórico', 'peso' => 'Peso corporal', 'atividade' => 'Atividade física', 'agua' => 'Ingestão de água', 'metas' => 'Metas'] as $key => $label)
                 <button type="button" @click="tab = '{{ $key }}'" class="chip" :class="tab === '{{ $key }}' && 'chip-active'">{{ $label }}</button>
             @endforeach
         </div>
@@ -57,7 +57,7 @@
                         <h2 class="text-lg font-bold text-slate-800">Calorias consumidas</h2>
                         <p class="mt-1 text-3xl font-light text-slate-800">{{ number_format($totals['calories'], 0, ',', '.') }} Kcal</p>
                     </div>
-                    <a href="{{ route('profile') }}" class="rounded-full bg-ice-100 p-2 text-slate-500 hover:text-navy-700" aria-label="Configurar metas">
+                    <a href="?tab=metas" @click.prevent="tab = 'metas'" class="rounded-full bg-ice-100 p-2 text-slate-500 hover:text-navy-700" aria-label="Configurar metas">
                         <svg class="size-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd"/></svg>
                     </a>
                 </div>
@@ -85,7 +85,7 @@
             <div class="card">
                 @php
                     $grams = fn ($v) => rtrim(rtrim(number_format($v, 1, ',', ''), '0'), ',');
-                    $fiberGoal = config('diet.fiber_goal_g');
+                    $fiberGoal = $nutrition['values']['fiber'];
                     $sugarLimit = round($goal * config('diet.sugar_limit_pct') / 100 / 4); // 1 g de açúcar = 4 kcal
                     $fiberPct = $fiberGoal > 0 ? (int) round($totals['fiber_g'] / $fiberGoal * 100) : 0;
                     $sugarPct = $sugarLimit > 0 ? (int) round($totals['sugar_g'] / $sugarLimit * 100) : 0;
@@ -106,18 +106,14 @@
                 <div x-ref="slides" @scroll.debounce.50ms="page = Math.round($el.scrollLeft / $el.clientWidth)"
                      class="no-scrollbar -mx-1 flex snap-x snap-mandatory overflow-x-auto">
                 <div class="flex w-full shrink-0 snap-start justify-between px-1">
-                    <x-ring :pct="$split['protein_pct']" color="#3b82f6" label="Proteínas">
-                        <span class="font-bold text-slate-800">{{ rtrim(rtrim(number_format($totals['protein_g'], 1, ',', ''), '0'), ',') }}g</span>
-                        <span class="text-[11px] text-slate-400">{{ $split['protein_pct'] }}%</span>
-                    </x-ring>
-                    <x-ring :pct="$split['carbs_pct']" color="#06b6d4" label="Carbos">
-                        <span class="font-bold text-slate-800">{{ rtrim(rtrim(number_format($totals['carbs_g'], 1, ',', ''), '0'), ',') }}g</span>
-                        <span class="text-[11px] text-slate-400">{{ $split['carbs_pct'] }}%</span>
-                    </x-ring>
-                    <x-ring :pct="$split['fat_pct']" color="#6366f1" label="Gorduras">
-                        <span class="font-bold text-slate-800">{{ rtrim(rtrim(number_format($totals['fat_g'], 1, ',', ''), '0'), ',') }}g</span>
-                        <span class="text-[11px] text-slate-400">{{ $split['fat_pct'] }}%</span>
-                    </x-ring>
+                    @foreach ([['protein', 'protein_g', '#3b82f6', 'Proteínas'], ['carbs', 'carbs_g', '#06b6d4', 'Carbos'], ['fat', 'fat_g', '#6366f1', 'Gorduras']] as [$key, $col, $color, $label])
+                        @php($target = $nutrition['values'][$key])
+                        @php($pct = $target > 0 ? (int) round($totals[$col] / $target * 100) : 0)
+                        <x-ring :pct="$pct" :color="$color" :label="$label">
+                            <span class="font-bold text-slate-800">{{ $grams($totals[$col]) }}g</span>
+                            <span class="text-[11px] {{ $pct > 110 ? 'text-rose-500' : 'text-slate-400' }}">de {{ $target }}g</span>
+                        </x-ring>
+                    @endforeach
                 </div>
                 <div class="flex w-full shrink-0 snap-start justify-around px-1">
                     <x-ring :pct="$sugarPct" :color="$sugarPct > 100 ? '#f43f5e' : '#94a3b8'" label="Açúcar">
@@ -130,10 +126,10 @@
                     </x-ring>
                 </div>
                 </div>
-                <p x-show="page === 0" class="mt-3 text-xs text-slate-400">Percentuais = participação de cada macronutriente nas calorias do dia. Deslize para ver açúcar e fibras →</p>
+                <p x-show="page === 0" class="mt-3 text-xs text-slate-400">Quanto você já consumiu das suas <button type="button" class="font-semibold text-navy-600 underline" @click="tab = 'metas'">metas</button> do dia. Deslize para ver açúcar e fibras →</p>
                 <p x-show="page === 1" x-cloak class="mt-3 text-xs text-slate-400">
                     Açúcar: limite de {{ config('diet.sugar_limit_pct') }}% da meta de calorias ({{ $sugarLimit }} g){{ $sugarPct > 100 ? ' · ultrapassou em ' . $grams($totals['sugar_g'] - $sugarLimit) . ' g' : '' }}.
-                    Fibras: recomendado ao menos {{ $fiberGoal }} g por dia.
+                    Fibras: meta de {{ $fiberGoal }} g por dia.
                 </p>
                 </div>
             </div>
@@ -155,6 +151,8 @@
         </section>
 
         @include('partials.tab-weight')
+
+        @include('partials.tab-goals')
 
         {{-- ==================== ATIVIDADE FÍSICA ==================== --}}
         <section x-show="tab === 'atividade'" x-cloak class="space-y-4">

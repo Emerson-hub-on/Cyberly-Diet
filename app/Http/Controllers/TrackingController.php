@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\WaterLog;
 use App\Models\WeightLog;
+use App\Services\NutritionGoals;
 use App\Services\WeightProgress;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -106,21 +107,36 @@ class TrackingController extends Controller
         return back()->with('status', 'Registro removido.');
     }
 
+    /**
+     * Salva as metas. Campos listados em "auto" voltam ao cálculo automático (coluna NULL).
+     */
     public function updateGoals(Request $request)
     {
         $data = $request->validate([
-            'calorie_goal' => ['required', 'integer', 'between:500,10000'],
-            'water_goal_ml' => ['required', 'integer', 'between:250,10000'],
+            'bmr_kcal' => ['nullable', 'integer', 'between:500,5000'],
             'weight_goal_kg' => ['nullable', 'numeric', 'between:20,400'],
-            'height_cm' => ['nullable', 'integer', 'between:50,250'],
-            'sex' => ['nullable', 'in:M,F'],
-            'birth_date' => ['nullable', 'date', 'before:today', 'after:1900-01-01'],
+            'water_goal_ml' => ['nullable', 'integer', 'between:250,10000'],
+            'calorie_goal' => ['nullable', 'integer', 'between:500,10000'],
+            'protein_goal_g' => ['nullable', 'integer', 'between:0,600'],
+            'carbs_goal_g' => ['nullable', 'integer', 'between:0,1500'],
+            'fat_goal_g' => ['nullable', 'integer', 'between:0,600'],
+            'fiber_goal_g' => ['nullable', 'integer', 'between:0,200'],
+            'auto' => ['nullable', 'string', 'max:200'],
         ]);
 
-        $request->user()->update($data);
-        $request->user()->logEvent('goals.updated', null, $data);
+        $auto = array_filter(explode(',', $data['auto'] ?? ''));
+        unset($data['auto']);
+        foreach (NutritionGoals::FIELDS as $field => $column) {
+            if (in_array($field, $auto, true)) {
+                $data[$column] = null;
+            }
+        }
 
-        return back()->with('status', 'Metas atualizadas.');
+        $user = $request->user();
+        $user->update($data);
+        $user->logEvent('goals.updated', null, array_filter($data, fn ($v) => $v !== null));
+
+        return redirect()->route('home', ['tab' => 'metas'])->with('status', 'Metas atualizadas.');
     }
 
     private function backTo(string $tab, string $date, string $status)

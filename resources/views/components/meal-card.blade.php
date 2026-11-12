@@ -1,7 +1,7 @@
 @props(['meal', 'compact' => false])
 @php
     $g = fn ($v) => rtrim(rtrim(number_format((float) ($v ?? 0), 1, ',', '.'), '0'), ',');
-    $fiberGoal = config('diet.fiber_goal_g');
+    $fiberGoal = \App\Services\NutritionGoals::for(auth()->user())['values']['fiber'];
     $fiberPct = $fiberGoal > 0 ? (int) round($meal->fiber_g / $fiberGoal * 100) : 0;
     $confidence = ['baixa' => 'baixa', 'media' => 'média', 'alta' => 'alta'][$meal->confidence] ?? null;
 @endphp

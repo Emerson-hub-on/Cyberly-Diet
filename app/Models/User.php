@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'calorie_goal', 'water_goal_ml', 'weight_goal_kg', 'height_cm', 'sex', 'birth_date'])]
+#[Fillable(['name', 'email', 'password', 'calorie_goal', 'water_goal_ml', 'weight_goal_kg', 'height_cm', 'sex', 'birth_date',
+    'bmr_kcal', 'protein_goal_g', 'carbs_goal_g', 'fat_goal_g', 'fiber_goal_g'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,6 +28,11 @@ class User extends Authenticatable
             'weight_goal_kg' => 'float',
             'height_cm' => 'integer',
             'birth_date' => 'date',
+            'bmr_kcal' => 'integer',
+            'protein_goal_g' => 'integer',
+            'carbs_goal_g' => 'integer',
+            'fat_goal_g' => 'integer',
+            'fiber_goal_g' => 'integer',
         ];
     }
 

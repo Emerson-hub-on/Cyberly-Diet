@@ -135,7 +135,7 @@
             @endif
 
             <p class="mt-3 text-xs text-slate-400">
-                Estimativa: metabolismo basal por Mifflin-St Jeor (TMB {{ $fmt($p['bmr'], 0) }} kcal) × 1,2, mais as atividades registradas;
+                Estimativa: {{ $p['bmr_custom'] ? 'TMB definida em Metas' : 'metabolismo basal por Mifflin-St Jeor' }} (TMB {{ $fmt($p['bmr'], 0) }} kcal) × 1,2, mais as atividades registradas;
                 1 kg ≈ {{ $fmt(config('diet.kcal_per_kg'), 0) }} kcal. O gasto é recalculado conforme o peso cai.
             </p>
         </div>
