@@ -349,7 +349,8 @@ Alpine.data('goalsForm', ({ inputs, own }) => ({
         switch (field) {
             case 'bmr':
                 if (weight == null || !height || !sex || age == null) return null;
-                return Math.round(10 * weight + 6.25 * height - 5 * age + (sex === 'F' ? -161 : 5));
+                // TMB (Mifflin-St Jeor) × 1,2 = gasto completo do dia sem exercício
+                return Math.round((10 * weight + 6.25 * height - 5 * age + (sex === 'F' ? -161 : 5)) * 1.2);
             case 'weight': {
                 if (weight == null || !height) return null;
                 const h2 = (height / 100) ** 2;
@@ -360,7 +361,7 @@ Alpine.data('goalsForm', ({ inputs, own }) => ({
             case 'calories': {
                 const bmr = this.show('bmr');
                 if (!bmr) return 2000;
-                let kcal = bmr * 1.2;
+                let kcal = bmr;
                 const goal = this.show('weight');
                 if (weight != null && goal != null) {
                     if (goal < weight - 0.5) kcal -= 500;

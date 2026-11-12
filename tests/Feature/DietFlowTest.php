@@ -187,14 +187,15 @@ class DietFlowTest extends TestCase
 
         // 2256 + 400 − 1500 = 1156 kcal de déficit
         $this->actingAs($user)->get('/?data=2026-11-05&tab=peso')->assertOk()
-            ->assertSeeInOrder(['Balanço de 05/11/2026', 'Caloria basal (TMB)', '1.880 kcal', '+ Gasto da rotina (20% da TMB)', '376 kcal',
+            ->assertSeeInOrder(['Balanço de 05/11/2026', 'Caloria basal', '2.256 kcal',
                 '+ Gasto em atividades', '400 kcal', '− Calorias consumidas', '1.500 kcal', 'Déficit do dia', '1.156 kcal']);
 
         // TMB cadastrada em Metas (ex.: nutricionista): aparece como está, e o balanço usa ela
         $user->update(['bmr_kcal' => 2253]);
         $this->get('/?data=2026-11-05&tab=peso')->assertOk()
-            ->assertSeeInOrder(['Caloria basal (TMB, de Metas)', '2.253 kcal', '+ Gasto da rotina (20% da TMB)', '451 kcal',
-                '+ Gasto em atividades', '400 kcal', '− Calorias consumidas', '1.500 kcal', 'Déficit do dia', '1.604 kcal']);
+            ->assertSeeInOrder(['Caloria basal (de Metas)', '2.253 kcal',
+                '+ Gasto em atividades', '400 kcal', '− Calorias consumidas', '1.500 kcal', 'Déficit do dia', '1.153 kcal'])
+            ->assertDontSee('Gasto da rotina');
 
         // Carrossel: Peso atual → Previsão → Progressão → Evolução → Variação; abaixo, formulário e histórico
         $this->get('/?data=2026-11-05&tab=peso')->assertSeeInOrder([

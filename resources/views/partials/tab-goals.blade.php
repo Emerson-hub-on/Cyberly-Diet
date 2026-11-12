@@ -6,9 +6,9 @@
     // [rótulo, unidade, coluna, passo, o que é, como o sistema calcula]
     $fields = [
         'Gasto basal' => [
-            'bmr' => ['Caloria basal (TMB)', 'kcal', 'bmr_kcal', 1,
-                'Taxa metabólica basal: as calorias que seu corpo gasta em repouso, só para se manter funcionando (respirar, bater o coração, manter a temperatura). Muda conforme sexo, idade, altura e peso.',
-                'Fórmula de Mifflin-St Jeor: 10 × peso (kg) + 6,25 × altura (cm) − 5 × idade, +5 para homens ou −161 para mulheres. Se o nutricionista passou um valor medido (bioimpedância, calorimetria), use o dele.'],
+            'bmr' => ['Caloria basal', 'kcal', 'bmr_kcal', 1,
+                'O que seu corpo gasta num dia sem exercício: o funcionamento em repouso (respirar, bater o coração, manter a temperatura), a digestão e a rotina (andar pela casa, trabalhar). Muda conforme sexo, idade, altura e peso. Os exercícios são somados à parte, pelas atividades que você registra.',
+                'Taxa metabólica basal pela fórmula de Mifflin-St Jeor (10 × peso + 6,25 × altura − 5 × idade, +5 para homens ou −161 para mulheres) × 1,2 para incluir digestão e rotina. Se o nutricionista passou um valor, digite aqui: ele é usado como está, sem nenhum acréscimo.'],
         ],
         'Objetivos' => [
             'weight' => ['Peso meta', 'kg', 'weight_goal_kg', 0.1,
@@ -19,7 +19,7 @@
                 '35 ml por kg de peso corporal.'],
             'calories' => ['Calorias/dia', 'kcal', 'calorie_goal', 10,
                 'Quanto comer por dia. É a meta da barra de Calorias consumidas e da previsão de peso.',
-                'TMB × 1,2 (gasto do dia sem exercício). Se o peso meta for menor que o atual, tira 500 kcal (perde cerca de 0,5 kg por semana). Se for maior, soma 300 kcal. Nunca fica abaixo de 1.200 kcal (mulheres) ou 1.500 kcal (homens).'],
+                'A caloria basal. Se o peso meta for menor que o atual, tira 500 kcal (perde cerca de 0,5 kg por semana). Se for maior, soma 300 kcal. Nunca fica abaixo de 1.200 kcal (mulheres) ou 1.500 kcal (homens).'],
         ],
         'Macronutrientes por dia' => [
             'protein' => ['Proteína', 'g', 'protein_goal_g', 1,

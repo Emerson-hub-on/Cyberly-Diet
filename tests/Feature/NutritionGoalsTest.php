@@ -24,33 +24,33 @@ class NutritionGoalsTest extends TestCase
     {
         $g = NutritionGoals::compute($this->person(), 100.0);
 
-        // TMB = 10·100 + 6,25·180 − 5·30 + 5 = 1980
-        $this->assertSame(1980, $g['values']['bmr']);
+        // Caloria basal = TMB (10·100 + 6,25·180 − 5·30 + 5 = 1980) × 1,2 = 2376
+        $this->assertSame(2376, $g['values']['bmr']);
         // Peso meta: IMC 24,9 em 1,80 m = 80,7 → 80,5 kg
         $this->assertSame(80.5, $g['values']['weight']);
         $this->assertSame(3500, $g['values']['water']);          // 35 ml × 100 kg
-        $this->assertSame(1880, $g['values']['calories']);       // 1980 × 1,2 − 500 = 1876 → 1880
+        $this->assertSame(1880, $g['values']['calories']);       // 2376 − 500 = 1876 → 1880
         $this->assertSame(129, $g['values']['protein']);         // 1,6 × 80,5 = 128,8
         $this->assertSame(63, $g['values']['fat']);              // 30% de 1880 / 9
         $this->assertSame(199, $g['values']['carbs']);           // (1880 − 129·4 − 63·9) / 4 = 199,25
         $this->assertSame(26, $g['values']['fiber']);            // 14 g × 1,88
         $this->assertTrue(collect($g['auto'])->every(fn ($a) => $a));
 
-        // Mulher com os mesmos dados: TMB −166
-        $this->assertSame(1814, NutritionGoals::compute($this->person(['sex' => 'F']), 100.0)['values']['bmr']);
+        // Mulher com os mesmos dados: TMB 1814 × 1,2
+        $this->assertSame(2177, NutritionGoals::compute($this->person(['sex' => 'F']), 100.0)['values']['bmr']);
     }
 
     public function test_custom_values_replace_suggestions_and_chain_to_the_rest(): void
     {
-        // Nutricionista passou TMB 2200 e 140 g de proteína
+        // Nutricionista passou caloria basal 2200 e 140 g de proteína: usada como está, sem acréscimo
         $g = NutritionGoals::compute($this->person(['bmr_kcal' => 2200, 'protein_goal_g' => 140]), 100.0);
 
         $this->assertSame(2200, $g['values']['bmr']);
         $this->assertFalse($g['auto']['bmr']);
-        $this->assertSame(2140, $g['values']['calories']);       // 2200 × 1,2 − 500 (automático, segue a TMB)
+        $this->assertSame(1700, $g['values']['calories']);       // 2200 − 500 (automático, segue a caloria basal)
         $this->assertTrue($g['auto']['calories']);
         $this->assertSame(140, $g['values']['protein']);
-        $this->assertSame(235, $g['values']['carbs']);           // (2140 − 140·4 − 71·9) / 4 = 235,25
+        $this->assertSame(157, $g['values']['carbs']);           // (1700 − 140·4 − 57·9) / 4 = 156,75
     }
 
     public function test_without_profile_data_uses_safe_defaults(): void
@@ -70,8 +70,8 @@ class NutritionGoalsTest extends TestCase
         $user = $this->person(['calorie_goal' => 1700]);
 
         $this->actingAs($user)->get('/?tab=metas')->assertOk()
-            ->assertSeeInOrder(['Caloria basal (TMB)', 'Peso meta', 'Água/dia', 'Calorias/dia', 'Proteína', 'Carboidrato', 'Gorduras', 'Fibras', 'Salvar metas'])
-            ->assertSee('aria-label="O que é Caloria basal (TMB)?"', false)
+            ->assertSeeInOrder(['Caloria basal', 'Peso meta', 'Água/dia', 'Calorias/dia', 'Proteína', 'Carboidrato', 'Gorduras', 'Fibras', 'Salvar metas'])
+            ->assertSee('aria-label="O que é Caloria basal?"', false)
             ->assertSee('Como o sistema calcula')
             ->assertSee('Mifflin-St Jeor');
 

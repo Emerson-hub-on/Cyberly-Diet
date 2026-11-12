@@ -35,12 +35,12 @@ class WeightProgress
 
     /**
      * Gasto diário sem contar exercícios (TMB × 1,2).
-     * $bmrOffset: diferença entre a TMB informada pelo usuário (ex.: nutricionista) e a fórmula,
+     * $offset: diferença entre a caloria basal cadastrada em Metas (ex.: nutricionista) e a fórmula,
      * mantida enquanto o peso muda.
      */
-    public static function baseExpenditure(float $weightKg, int $heightCm, int $age, string $sex, float $bmrOffset = 0): float
+    public static function baseExpenditure(float $weightKg, int $heightCm, int $age, string $sex, float $offset = 0): float
     {
-        return (self::bmr($weightKg, $heightCm, $age, $sex) + $bmrOffset) * self::SEDENTARY_FACTOR;
+        return self::bmr($weightKg, $heightCm, $age, $sex) * self::SEDENTARY_FACTOR + $offset;
     }
 
     public static function metFor(string $activity): float
@@ -74,18 +74,18 @@ class WeightProgress
      *
      * @return array{days: ?int, equilibrium_kg: ?float}
      */
-    public static function project(float $weight, float $goal, float $intakePerDay, float $activityPerDay, int $heightCm, int $age, string $sex, float $bmrOffset = 0): array
+    public static function project(float $weight, float $goal, float $intakePerDay, float $activityPerDay, int $heightCm, int $age, string $sex, float $offset = 0): array
     {
         $direction = $goal < $weight ? -1 : 1; // -1 = perder, 1 = ganhar
         $kcalPerKg = config('diet.kcal_per_kg');
 
         // Peso em que o gasto se iguala à ingestão (ponto onde o peso estabiliza)
         $sexConst = $sex === 'F' ? -161 : 5;
-        $equilibrium = (($intakePerDay - $activityPerDay) / self::SEDENTARY_FACTOR - $bmrOffset - 6.25 * $heightCm + 5 * $age - $sexConst) / 10;
+        $equilibrium = (($intakePerDay - $activityPerDay - $offset) / self::SEDENTARY_FACTOR - 6.25 * $heightCm + 5 * $age - $sexConst) / 10;
 
         $w = $weight;
         for ($day = 1; $day <= 3650; $day++) {
-            $balance = $intakePerDay - self::baseExpenditure($w, $heightCm, $age, $sex, $bmrOffset) - $activityPerDay;
+            $balance = $intakePerDay - self::baseExpenditure($w, $heightCm, $age, $sex, $offset) - $activityPerDay;
 
             // Balanço no sentido errado (ex.: quer perder mas está em superávit)
             if ($balance * $direction <= 0) {
@@ -153,8 +153,8 @@ class WeightProgress
         $height = $user->height_cm;
         $sex = $user->sex;
         $intakeGoal = $nutrition['values']['calories'];
-        // TMB personalizada: mantém a diferença para a fórmula enquanto o peso muda
-        $offset = $nutrition['auto']['bmr'] ? 0.0 : $user->bmr_kcal - self::bmr($current->weight_kg, $height, $age, $sex);
+        // Caloria basal personalizada (já é o gasto completo do dia): mantém a diferença para a fórmula enquanto o peso muda
+        $offset = $nutrition['auto']['bmr'] ? 0.0 : $user->bmr_kcal - self::baseExpenditure($current->weight_kg, $height, $age, $sex);
 
         $daily = $this->dailyBalances($user, $date->subDays(55), $date, $weights, $height, $age, $sex, $offset);
         $last7 = $daily->slice(-7);
@@ -193,7 +193,7 @@ class WeightProgress
         $expectedChange = $sinceStart->where('logged', true)->sum('balance') / config('diet.kcal_per_kg');
 
         return $result + [
-            'bmr' => (int) round(self::bmr($current->weight_kg, $height, $age, $sex) + $offset),
+            'bmr' => (int) round(self::bmr($current->weight_kg, $height, $age, $sex)), // TMB pura (Mifflin), só para a nota
             'bmr_custom' => ! $nutrition['auto']['bmr'],
             'base_expenditure' => (int) round($base),
             'intake_goal' => $intakeGoal,

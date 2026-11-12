@@ -14,8 +14,9 @@ use App\Models\User;
  *
  * As mesmas fórmulas existem em resources/js/app.js (goalsForm), para o recálculo ao vivo na tela.
  *
- * - TMB: Mifflin-St Jeor.
- * - Calorias/dia: TMB × 1,2 (sem exercício); −500 kcal para perder peso, +300 para ganhar.
+ * - Caloria basal: gasto completo do dia sem exercício = TMB de Mifflin-St Jeor × 1,2
+ *   (repouso + digestão + rotina). Os exercícios entram à parte, pelas atividades registradas.
+ * - Calorias/dia: caloria basal −500 kcal para perder peso, +300 para ganhar.
  *   Nunca abaixo de 1.200 kcal (mulheres) / 1.500 kcal (homens).
  * - Água: 35 ml por kg.
  * - Proteína: 1,6 g por kg do peso meta (até 35% das calorias).
@@ -111,7 +112,7 @@ class NutritionGoals
             return null;
         }
 
-        return (int) round(WeightProgress::bmr($inputs['weight'], $inputs['height'], $inputs['age'], $inputs['sex']));
+        return (int) round(WeightProgress::baseExpenditure($inputs['weight'], $inputs['height'], $inputs['age'], $inputs['sex']));
     }
 
     /** Peso dentro da faixa saudável de IMC (18,5–24,9) mais próximo do atual. */
@@ -138,7 +139,7 @@ class NutritionGoals
             return self::DEFAULT_CALORIES;
         }
 
-        $kcal = $bmr * WeightProgress::SEDENTARY_FACTOR;
+        $kcal = $bmr;
         if ($weight !== null && $weightGoal !== null) {
             $kcal += match (true) {
                 $weightGoal < $weight - 0.5 => -500,
