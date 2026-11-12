@@ -22,9 +22,23 @@
 <section x-show="tab === 'peso'" x-cloak class="space-y-4">
 
     {{-- Carrossel: deslize para o lado para ver previsão, progressão e gráficos --}}
-    <div x-data="{ page: 0, go(i) { const el = this.$refs.slides; el.scrollTo({ left: i * (el.clientWidth + 12), behavior: 'smooth' }) } }">
+    {{-- A altura acompanha o card visível (sem espaço vazio quando um card é mais baixo que os outros) --}}
+    <div x-data="{
+            page: 0,
+            go(i) { const el = this.$refs.slides; el.scrollTo({ left: i * (el.clientWidth + 12), behavior: 'smooth' }) },
+            fit() {
+                const slide = this.$refs.slides.children[this.page];
+                if (slide && slide.offsetHeight) this.$refs.slides.style.height = (slide.offsetHeight + 16) + 'px';
+            },
+            init() {
+                this.$watch('page', () => this.fit());
+                // Recalcula quando a aba aparece, um gráfico termina de desenhar ou a tela muda de tamanho
+                const ro = new ResizeObserver(() => this.fit());
+                [...this.$refs.slides.children].forEach((slide) => ro.observe(slide));
+            },
+         }">
     <div x-ref="slides" @scroll.debounce.50ms="page = Math.round($el.scrollLeft / ($el.clientWidth + 12))"
-         class="no-scrollbar -my-2 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto py-2">
+         class="no-scrollbar -my-2 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overflow-y-hidden py-2 transition-[height] duration-300">
 
     {{-- Peso atual x meta --}}
     <div class="w-full shrink-0 snap-start space-y-4">
