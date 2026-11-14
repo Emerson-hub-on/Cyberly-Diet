@@ -65,7 +65,7 @@
                     $fiberPct = $fiberGoal > 0 ? (int) round($totals['fiber_g'] / $fiberGoal * 100) : 0;
                     $sugarPct = $sugarLimit > 0 ? (int) round($totals['sugar_g'] / $sugarLimit * 100) : 0;
                 @endphp
-                <div x-data="{ page: 0 }">
+                <div x-data="{ page: 0, nutrient: null }">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-lg font-bold text-slate-800">Nutrientes do dia</h2>
                     <div class="flex gap-1">
@@ -84,28 +84,36 @@
                     @foreach ([['protein', 'protein_g', '#3b82f6', 'Proteínas'], ['carbs', 'carbs_g', '#06b6d4', 'Carbos'], ['fat', 'fat_g', '#6366f1', 'Gorduras']] as [$key, $col, $color, $label])
                         @php($target = $nutrition['values'][$key])
                         @php($pct = $target > 0 ? (int) round($totals[$col] / $target * 100) : 0)
-                        <x-ring :pct="$pct" :color="$color" :label="$label">
-                            <span class="font-bold text-slate-800">{{ $grams($totals[$col]) }}g</span>
-                            <span class="text-[11px] {{ $pct > 110 ? 'text-rose-500' : 'text-slate-400' }}">de {{ $target }}g</span>
-                        </x-ring>
+                        <button type="button" @click="nutrient = '{{ $key }}'" aria-label="Detalhes de {{ $label }}" class="rounded-2xl transition active:scale-95">
+                            <x-ring :pct="$pct" :color="$color" :label="$label">
+                                <span class="font-bold text-slate-800">{{ $grams($totals[$col]) }}g</span>
+                                <span class="text-[11px] {{ $pct > 110 ? 'text-rose-500' : 'text-slate-400' }}">de {{ $target }}g</span>
+                            </x-ring>
+                        </button>
                     @endforeach
                 </div>
                 <div class="flex w-full shrink-0 snap-start justify-around px-1">
-                    <x-ring :pct="$sugarPct" :color="$sugarPct > 100 ? '#f43f5e' : '#94a3b8'" label="Açúcar">
-                        <span class="font-bold text-slate-800">{{ $grams($totals['sugar_g']) }}g</span>
-                        <span class="text-[11px] {{ $sugarPct > 100 ? 'text-rose-500' : 'text-slate-400' }}">de {{ $sugarLimit }}g</span>
-                    </x-ring>
-                    <x-ring :pct="$fiberPct" color="#10b981" label="Fibras">
-                        <span class="font-bold text-slate-800">{{ $grams($totals['fiber_g']) }}g</span>
-                        <span class="text-[11px] {{ $fiberPct >= 100 ? 'text-emerald-600' : 'text-slate-400' }}">de {{ $fiberGoal }}g</span>
-                    </x-ring>
+                    <button type="button" @click="nutrient = 'sugar'" aria-label="Detalhes de Açúcar" class="rounded-2xl transition active:scale-95">
+                        <x-ring :pct="$sugarPct" :color="$sugarPct > 100 ? '#f43f5e' : '#94a3b8'" label="Açúcar">
+                            <span class="font-bold text-slate-800">{{ $grams($totals['sugar_g']) }}g</span>
+                            <span class="text-[11px] {{ $sugarPct > 100 ? 'text-rose-500' : 'text-slate-400' }}">de {{ $sugarLimit }}g</span>
+                        </x-ring>
+                    </button>
+                    <button type="button" @click="nutrient = 'fiber'" aria-label="Detalhes de Fibras" class="rounded-2xl transition active:scale-95">
+                        <x-ring :pct="$fiberPct" color="#10b981" label="Fibras">
+                            <span class="font-bold text-slate-800">{{ $grams($totals['fiber_g']) }}g</span>
+                            <span class="text-[11px] {{ $fiberPct >= 100 ? 'text-emerald-600' : 'text-slate-400' }}">de {{ $fiberGoal }}g</span>
+                        </x-ring>
+                    </button>
                 </div>
                 </div>
-                <p x-show="page === 0" class="mt-3 text-xs text-slate-400">Quanto você já consumiu das suas <button type="button" class="font-semibold text-navy-600 underline" @click="tab = 'metas'">metas</button> do dia. Deslize para ver açúcar e fibras →</p>
+                <p x-show="page === 0" class="mt-3 text-xs text-slate-400">Quanto você já consumiu das suas <button type="button" class="font-semibold text-navy-600 underline" @click="tab = 'metas'">metas</button> do dia. Toque num nutriente para ver os detalhes. Deslize para ver açúcar e fibras →</p>
                 <p x-show="page === 1" x-cloak class="mt-3 text-xs text-slate-400">
                     Açúcar: limite de {{ config('diet.sugar_limit_pct') }}% da meta de calorias ({{ $sugarLimit }} g){{ $sugarPct > 100 ? ' · ultrapassou em ' . $grams($totals['sugar_g'] - $sugarLimit) . ' g' : '' }}.
-                    Fibras: meta de {{ $fiberGoal }} g por dia.
+                    Fibras: meta de {{ $fiberGoal }} g por dia. Toque para ver os detalhes.
                 </p>
+
+                @include('partials.nutrient-modal')
                 </div>
             </div>
 

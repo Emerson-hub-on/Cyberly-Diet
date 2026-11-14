@@ -90,4 +90,21 @@ class CheerTest extends TestCase
             ->post('/atividades', ['activity' => 'Corrida', 'duration_min' => 30, 'performed_on' => now()->toDateString()])
             ->assertOk()->assertSee('cheerToast(JSON.parse(', false)->assertSee('kind\u0022:\u0022activity', false);
     }
+
+    public function test_nutrient_rings_open_modal_with_table_and_foods(): void
+    {
+        $user = User::factory()->create(['protein_goal_g' => 120, 'calorie_goal' => 2000]);
+        $user->meals()->create(['meal_type' => 'almoco', 'eaten_at' => now()->setTime(12, 0), 'title' => 'Frango e arroz',
+            'calories' => 600, 'protein_g' => 45, 'carbs_g' => 60, 'fat_g' => 12, 'sugar_g' => 60, 'fiber_g' => 5]);
+
+        $this->actingAs($user)->get('/')->assertOk()
+            ->assertSee("@click=\"nutrient = 'protein'\"", false)
+            ->assertSee("@click=\"nutrient = 'fiber'\"", false)
+            // Proteína: 45 g de 120 g → falta 75 g; depois os alimentos ricos
+            ->assertSeeInOrder(['data-nutrient="protein"', 'Proteínas do dia', 'Almoço', 'Frango e arroz', '45 g',
+                'Consumido', '45 g', 'Meta do dia', '120 g', 'Falta', '75 g', 'Alimentos ricos em proteína', 'Peito de frango grelhado'], false)
+            // Açúcar: limite 10% de 2000 kcal = 50 g → passou 10 g
+            ->assertSeeInOrder(['data-nutrient="sugar"', 'Limite do dia', '50 g', 'Passou do limite', '10 g', 'Onde tem muito açúcar'], false)
+            ->assertSeeInOrder(['data-nutrient="fiber"', 'Falta', 'Alimentos ricos em fibras'], false);
+    }
 }
