@@ -61,12 +61,18 @@ const pad = (n) => String(n).padStart(2, '0');
 /* ------------------------------------------------------------------ */
 Alpine.store('mealModal', {
     open: false,
+    saved: false,
     show() {
         this.open = true;
         window.dispatchEvent(new CustomEvent('meal-modal-opened'));
     },
     hide() {
         this.open = false;
+        // Uma refeição foi salva: recarrega a tela atual para os totais (calorias, nutrientes, lista) já somarem.
+        if (this.saved) {
+            this.saved = false;
+            window.location.reload();
+        }
     },
 });
 
@@ -142,6 +148,7 @@ Alpine.data('mealForm', (defaultDate) => ({
             }
             this.result = data.meal;
             this.redirect = data.redirect;
+            Alpine.store('mealModal').saved = true;
         } catch (e) {
             this.error = !navigator.onLine || e instanceof TypeError ? 'Sem conexão com internet.' : e.message;
         } finally {
@@ -150,6 +157,7 @@ Alpine.data('mealForm', (defaultDate) => ({
     },
 
     finish() {
+        Alpine.store('mealModal').saved = false;
         window.location.href = this.redirect || '/';
     },
 
