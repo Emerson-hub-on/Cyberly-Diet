@@ -11,6 +11,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-dvh">
+    {{-- Mensagem de incentivo depois de um registro (some sozinha em alguns segundos) --}}
+    <div x-data="cheerToast(@js(session('cheer')))" class="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
+        <div x-show="show" x-cloak role="status" aria-live="polite" @click="close()"
+             x-transition:enter="transition duration-300 ease-out" x-transition:enter-start="-translate-y-full opacity-0" x-transition:enter-end="translate-y-0 opacity-100"
+             x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="opacity-100" x-transition:leave-end="-translate-y-4 opacity-0"
+             class="cheer-toast pointer-events-auto flex w-full max-w-md cursor-pointer items-start gap-3 rounded-2xl px-4 py-3 text-sm text-navy-800">
+            <span class="text-2xl leading-none" x-text="cheer?.icon"></span>
+            <p class="flex-1 font-medium leading-snug" x-text="cheer?.text"></p>
+        </div>
+    </div>
+
     {{-- Cabeçalho --}}
     <header class="sticky top-0 z-30 bg-navy-700 pt-[env(safe-area-inset-top)] text-white shadow-md">
         <div class="mx-auto flex h-14 max-w-md items-center justify-between px-4">

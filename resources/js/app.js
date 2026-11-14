@@ -149,6 +149,8 @@ Alpine.data('mealForm', (defaultDate) => ({
             this.result = data.meal;
             this.redirect = data.redirect;
             Alpine.store('mealModal').saved = true;
+            // Mostrado no topo da próxima tela (depois do recarregamento)
+            try { if (data.cheer) sessionStorage.setItem('cheer', JSON.stringify(data.cheer)); } catch {}
         } catch (e) {
             this.error = !navigator.onLine || e instanceof TypeError ? 'Sem conexão com internet.' : e.message;
         } finally {
@@ -163,6 +165,32 @@ Alpine.data('mealForm', (defaultDate) => ({
 
     fmt(value) {
         return Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    },
+}));
+
+/* ------------------------------------------------------------------ */
+/* Mensagem de incentivo no topo (refeição, água, atividade)           */
+/* ------------------------------------------------------------------ */
+Alpine.data('cheerToast', (fromServer) => ({
+    cheer: null,
+    show: false,
+    timer: null,
+
+    init() {
+        let pending = null;
+        try {
+            pending = JSON.parse(sessionStorage.getItem('cheer') || 'null');
+            sessionStorage.removeItem('cheer');
+        } catch {}
+        this.cheer = fromServer || pending;
+        if (!this.cheer) return;
+        setTimeout(() => (this.show = true), 250);
+        this.timer = setTimeout(() => this.close(), 5500);
+    },
+
+    close() {
+        clearTimeout(this.timer);
+        this.show = false;
     },
 }));
 

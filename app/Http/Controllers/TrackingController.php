@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\WaterLog;
 use App\Models\WeightLog;
+use App\Services\Cheer;
 use App\Services\NutritionGoals;
 use App\Services\WeightProgress;
 use Carbon\CarbonImmutable;
@@ -72,7 +73,8 @@ class TrackingController extends Controller
         $log = $user->activityLogs()->create($data);
         $user->logEvent('activity.logged', $log, $data + ['weight_kg_used' => $weight]);
 
-        return $this->backTo('atividade', $data['performed_on'], "{$log->activity}: {$log->duration_min} min, −{$log->calories_burned} kcal.");
+        return $this->backTo('atividade', $data['performed_on'], "{$log->activity}: {$log->duration_min} min, −{$log->calories_burned} kcal.")
+            ->with('cheer', Cheer::make('activity'));
     }
 
     public function destroyActivity(Request $request, ActivityLog $log)
@@ -96,7 +98,8 @@ class TrackingController extends Controller
         $log = $request->user()->waterLogs()->create(['amount_ml' => $data['amount_ml'], 'logged_at' => $loggedAt]);
         $request->user()->logEvent('water.logged', $log, ['amount_ml' => $log->amount_ml]);
 
-        return $this->backTo('agua', $date->toDateString(), "+{$log->amount_ml} ml de água.");
+        return $this->backTo('agua', $date->toDateString(), "+{$log->amount_ml} ml de água.")
+            ->with('cheer', Cheer::forWater($request->user(), $date));
     }
 
     public function destroyWater(Request $request, WaterLog $log)
