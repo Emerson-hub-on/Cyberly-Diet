@@ -12,7 +12,7 @@
 <template x-teleport="body">
     <div x-show="nutrient" x-cloak x-transition.opacity class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
          @click.self="nutrient = null" @keydown.escape.window="nutrient = null" role="dialog" aria-modal="true">
-        <div x-show="nutrient" x-transition class="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 shadow-xl">
+        <div x-show="nutrient" x-transition class="max-h-[85dvh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-3xl bg-white p-5 shadow-xl">
             @foreach ($nutrients as $key => [$label, $col, $color, $target, $isLimit])
                 @php
                     $eaten = (float) $totals[$col];
@@ -38,11 +38,12 @@
                     <p class="mt-1 text-xs text-slate-500">{{ $pct }}% {{ $isLimit ? 'do limite' : 'da meta' }}</p>
 
                     {{-- Tabela: o que já foi consumido e quanto falta --}}
-                    <table class="mt-4 w-full text-sm">
+                    <table class="mt-4 w-full table-fixed text-sm">
+                        <colgroup><col><col class="w-24"></colgroup>
                         <thead>
                             <tr class="border-b border-ice-100 text-left text-xs uppercase tracking-wide text-slate-400">
                                 <th class="pb-2 font-semibold">Refeição</th>
-                                <th class="pb-2 text-right font-semibold">{{ $label }}</th>
+                                <th class="pb-2 text-right font-semibold">Gramas</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -52,7 +53,7 @@
                                         <span class="font-medium text-slate-700">{{ $meal->type_label }}</span>
                                         <span class="text-xs text-slate-400">{{ $meal->eaten_at->format('H:i') }}</span>
                                         @if ($meal->title)
-                                            <span class="block truncate text-xs text-slate-400">{{ $meal->title }}</span>
+                                            <span class="line-clamp-2 block break-words text-xs text-slate-400">{{ $meal->title }}</span>
                                         @endif
                                     </td>
                                     <td class="py-2 text-right font-medium text-slate-700">{{ $meal->{$col} !== null ? $grams($meal->{$col}).' g' : '—' }}</td>
@@ -95,7 +96,7 @@
                     <ul class="mt-2 divide-y divide-ice-50 rounded-xl bg-ice-50 px-3">
                         @foreach ($foods['foods'] as [$food, $portion, $amount])
                             <li class="flex items-center justify-between gap-2 py-2 text-sm">
-                                <span class="text-slate-700">{{ $food }} <span class="text-xs text-slate-400">· {{ $portion }}</span></span>
+                                <span class="min-w-0 text-slate-700">{{ $food }} <span class="text-xs text-slate-400">· {{ $portion }}</span></span>
                                 <span class="shrink-0 font-semibold" style="color: {{ $color === '#94a3b8' ? '#64748b' : $color }}">{{ $amount }} g</span>
                             </li>
                         @endforeach
